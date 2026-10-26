@@ -57,7 +57,12 @@ parser.add_argument('--tensorboard',
                     action='store_true',
                     default=False,
                     help='Enables tensorboard log')
-parser.add_argument('--modals', default='avl', help='modals')
+parser.add_argument(
+    '--modals',
+    default='tva',
+    help='modalities to use: any non-empty subset of t(ext), v(isual), a(coustic); '
+    'e.g. tva (full), va (no text), ta (no visual), tv (no acoustic)',
+)
 parser.add_argument(
     '--dataset',
     default='IEMOCAP',
@@ -117,10 +122,15 @@ parser.add_argument(
 
 args = parser.parse_args()
 
+if not args.modals or set(args.modals) - set('tva'):
+    parser.error("--modals must be a non-empty subset of 't', 'v', 'a'")
+
 os.environ['MASTER_ADDR'] = 'localhost'
 os.environ['MASTER_PORT'] = args.port
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-world_size = torch.cuda.device_count()
+if not torch.cuda.is_available():
+    args.no_cuda = True
+world_size = max(torch.cuda.device_count(), 1)
 os.environ['WORLD_SIZE'] = str(world_size)
 
 MELD_path = ''
@@ -135,9 +145,11 @@ logger = logging.getLogger(__name__)
 def init_ddp(local_rank):
     try:
         if not dist.is_initialized():
-            torch.cuda.set_device(local_rank)
+            backend = 'gloo' if args.no_cuda else 'nccl'
+            if not args.no_cuda:
+                torch.cuda.set_device(local_rank)
             os.environ['RANK'] = str(local_rank)
-            dist.init_process_group(backend='nccl', init_method='env://')
+            dist.init_process_group(backend=backend, init_method='env://')
         else:
             logger.info('Distributed process group already initialized.')
     except Exception as e:
@@ -246,11 +258,12 @@ def main(local_rank):
     seed_everything()
     model = GraphSmile(args, embedding_dims, n_classes_emo)
 
-    model = model.to(local_rank)
+    device = torch.device('cuda', local_rank) if cuda else torch.device('cpu')
+    model = model.to(device)
     model = DDP(
         model,
-        device_ids=[local_rank],
-        output_device=local_rank,
+        device_ids=[local_rank] if cuda else None,
+        output_device=local_rank if cuda else None,
         find_unused_parameters=True,
     )
 
@@ -470,7 +483,7 @@ def main(local_rank):
             writer.add_scalar("train: accuracy", train_acc_emo, epoch)
             writer.add_scalar("train: fscore", train_f1_emo, epoch)
 
-        if epoch == 1:
+        if cuda and epoch == 1:
             allocated_memory = torch.cuda.memory_allocated()
             reserved_memory = torch.cuda.memory_reserved()
             print(f"Allocated Memory: {allocated_memory / 1024**2:.2f} MB")
@@ -484,6 +497,7 @@ def main(local_rank):
     if local_rank == 0:
         print("Test performance..")
         print("Acc: {}, F-Score: {}".format(max(all_acc_emo), max(all_f1_emo)))
+        os.makedirs('results', exist_ok=True)
         if not os.path.exists("results/record_{}_{}_{}.pk".format(
                 today.year, today.month, today.day)):
             with open(
@@ -539,4 +553,7 @@ if __name__ == "__main__":
     print("not args.no_cuda:", not args.no_cuda)
     n_gpus = torch.cuda.device_count()
     print(f"Use {n_gpus} GPUs")
-    mp.spawn(fn=main, args=(), nprocs=n_gpus)
+    if n_gpus == 0:
+        main(0)
+    else:
+        mp.spawn(fn=main, args=(), nprocs=n_gpus)

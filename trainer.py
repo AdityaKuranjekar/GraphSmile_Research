@@ -57,6 +57,15 @@ def train_or_eval_model(
         textf0, textf1, textf2, textf3, visuf, acouf, qmask, umask, label_emotion, label_sentiment = (
             [d.cuda() for d in data[:-1]] if cuda else data[:-1])
 
+        if 't' not in modals:
+            textf0, textf1, textf2, textf3 = [
+                torch.zeros_like(f) for f in (textf0, textf1, textf2, textf3)
+            ]
+        if 'v' not in modals:
+            visuf = torch.zeros_like(visuf)
+        if 'a' not in modals:
+            acouf = torch.zeros_like(acouf)
+
         dia_lengths, label_emotions, label_sentiments = [], [], []
         for j in range(umask.size(1)):
             dia_lengths.append((umask[:, j] == 1).nonzero().tolist()[-1][0] +
