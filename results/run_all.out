@@ -1,3 +1,30 @@
 [17:16:28] IEMOCAP / full -> results/logs/IEMOCAP_full.log
 [17:20:04] IEMOCAP / no_text -> results/logs/IEMOCAP_no_text.log
 [17:23:38] IEMOCAP / no_visual -> results/logs/IEMOCAP_no_visual.log
+[17:27:22] IEMOCAP / no_acoustic -> results/logs/IEMOCAP_no_acoustic.log
+[17:31:00] IEMOCAP / no_Ls -> results/logs/IEMOCAP_no_Ls.log
+[17:34:32] IEMOCAP / no_Lo -> results/logs/IEMOCAP_no_Lo.log
+[17:38:00] IEMOCAP / no_Ls_Lo -> results/logs/IEMOCAP_no_Ls_Lo.log
+[17:41:25] IEMOCAP4 / full -> results/logs/IEMOCAP4_full.log
+[17:43:38] IEMOCAP4 / no_text -> results/logs/IEMOCAP4_no_text.log
+[17:45:46] IEMOCAP4 / no_visual -> results/logs/IEMOCAP4_no_visual.log
+[17:47:54] IEMOCAP4 / no_acoustic -> results/logs/IEMOCAP4_no_acoustic.log
+[17:50:08] IEMOCAP4 / no_Ls -> results/logs/IEMOCAP4_no_Ls.log
+[17:52:15] IEMOCAP4 / no_Lo -> results/logs/IEMOCAP4_no_Lo.log
+[17:54:19] IEMOCAP4 / no_Ls_Lo -> results/logs/IEMOCAP4_no_Ls_Lo.log
+[17:56:40] MELD / full -> results/logs/MELD_full.log
+[18:03:19] MELD / no_text -> results/logs/MELD_no_text.log
+[18:09:54] MELD / no_visual -> results/logs/MELD_no_visual.log
+[18:16:37] MELD / no_acoustic -> results/logs/MELD_no_acoustic.log
+[18:23:47] MELD / no_Ls -> results/logs/MELD_no_Ls.log
+[18:30:39] MELD / no_Lo -> results/logs/MELD_no_Lo.log
+[18:37:06] MELD / no_Ls_Lo -> results/logs/MELD_no_Ls_Lo.log
+[18:43:28] CMUMOSEI7 / full -> results/logs/CMUMOSEI7_full.log
+[18:57:14] CMUMOSEI7 / no_text -> results/logs/CMUMOSEI7_no_text.log
+[19:10:53] CMUMOSEI7 / no_visual -> results/logs/CMUMOSEI7_no_visual.log
+[19:24:26] CMUMOSEI7 / no_acoustic -> results/logs/CMUMOSEI7_no_acoustic.log
+[19:37:56] CMUMOSEI7 / no_Ls -> results/logs/CMUMOSEI7_no_Ls.log
+[19:51:30] CMUMOSEI7 / no_Lo -> results/logs/CMUMOSEI7_no_Lo.log
+[20:03:40] CMUMOSEI7 / no_Ls_Lo -> results/logs/CMUMOSEI7_no_Ls_Lo.log
+Done. Failed runs: 0
+Comparison written to results/comparison.md
