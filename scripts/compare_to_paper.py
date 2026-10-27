@@ -5,9 +5,11 @@ Per-class F1 comes from the final classification report, which run.py prints for
 Sentiment (MSAC) numbers are the sentiment head (test_acc_sen / test_f1_sen) at that epoch.
 Output is a markdown report on stdout:  python scripts/compare_to_paper.py > results/comparison.md
 """
+import contextlib
 import glob
 import os
 import re
+import sys
 
 LOG_DIR = 'results/logs'
 
@@ -194,13 +196,25 @@ def extra_runs():
     print()
 
 
-def main():
+def build_report():
     print('# GraphSmile: our results vs the paper\n')
     table_iv()
     table_v()
     table_vi()
     table_vii()
     extra_runs()
+
+
+def main():
+    # Usage: python scripts/compare_to_paper.py [output.md]
+    # With a path, the report is written as UTF-8, which works on Windows too.
+    if len(sys.argv) > 1:
+        with open(sys.argv[1], 'w', encoding='utf-8') as f:
+            with contextlib.redirect_stdout(f):
+                build_report()
+        print(f'Wrote {sys.argv[1]}')
+    else:
+        build_report()
 
 
 if __name__ == '__main__':
