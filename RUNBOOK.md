@@ -119,3 +119,15 @@ A full 120-epoch run on CPU will take a very long time. Use `--epochs 2` to conf
 - At the end the script prints the best accuracy and F1. Results are also saved to `results/record_<date>.pk`.
 - The script selects the best epoch by **test** F1, which is the protocol this code uses. It is not a clean validation split, so treat the numbers as a comparison with the paper, not as unbiased estimates.
 - Expect small differences from the paper because of GPU non-determinism. Run several seeds if you need error bars.
+
+## 8. Regenerate all tables in one go
+
+`scripts/run_all.sh` runs the full model and the runnable ablations for all four datasets (28 runs, sequential). Logs go to `results/logs/`, and `scripts/summarize.py` builds a markdown table from them.
+
+```bash
+cd GraphSmile_Research
+GPU=0 bash scripts/run_all.sh 2>&1 | tee results/run_all.out
+python scripts/summarize.py > results/summary.md
+```
+
+Not included: the "No Res", "No FC-Res" and "No Seg" rows of Table VI. The code has no switches for them, so they need model changes first.
