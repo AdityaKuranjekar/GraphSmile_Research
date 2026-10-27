@@ -157,14 +157,24 @@ def table_vi():
     headers = ['IEMOCAP-6', 'IEMOCAP-4', 'MELD', 'CMU-MOSEI']
     print('| Variant | Dataset | Paper MERC | Ours MERC | Paper MSAC | Ours MSAC |')
     print('|---|---|---|---|---|---|')
+    # Paper MSAC values for these tags are not comparable (see the notes below).
+    not_comparable = {'no_Ls', 'no_Ls_Lo'}
     for tag, rows in PAPER_TABLE_VI.items():
         for ds, h, p in zip(PAPER_TABLE_IV.keys(), headers, rows):
             r = load(tag, ds)
             ours_m = f"{fmt(r['acc_emo'])} / {fmt(r['f1_emo'])}" if r else 'not run'
-            ours_s = f"{fmt(r['acc_sen'])} / {fmt(r['f1_sen'])}" if r else 'not run'
-            print(f'| {tag} | {h} | {p[0]:.2f} / {p[1]:.2f} | {ours_m} | '
-                  f'{p[2]:.2f} / {p[3]:.2f} | {ours_s} |')
-    print('\nNot run: No Res, No FC-Res, No Seg (the code has no switch for these yet).\n')
+            if tag in not_comparable:
+                paper_s, ours_s = 'not comparable', 'not comparable'
+            else:
+                paper_s = f'{p[2]:.2f} / {p[3]:.2f}'
+                ours_s = f"{fmt(r['acc_sen'])} / {fmt(r['f1_sen'])}" if r else 'not run'
+            print(f'| {tag} | {h} | {p[0]:.2f} / {p[1]:.2f} | {ours_m} | {paper_s} | {ours_s} |')
+    print('\nNotes:')
+    print('- Paper Table VI lower block (MSAC) uses No L_e / No L_o / No L_e & L_o. Our `no_Ls` and '
+          '`no_Ls_Lo` runs remove the sentiment loss, so they are not comparable with the MSAC rows.')
+    print('- Paper Table VI MSAC values use the optimized sentiment settings (‡); our runs use '
+          'the Table III settings (†).')
+    print('- Not run: No L_e and No L_e & L_o (MSAC), No Res, No FC-Res, No Seg.\n')
 
 
 def table_vii():

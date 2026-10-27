@@ -133,22 +133,22 @@ MERC columns are emotion ACC / WF1. MSAC columns are sentiment ACC / WF1.
 
 | Variant | Dataset | Paper MERC | Ours MERC | Paper MSAC | Ours MSAC |
 |---|---|---|---|---|---|
-| GraphSmile (full) | IEMOCAP-6 | 72.77 / 72.81 | 71.23 / 71.17 | 84.97 / 85.09 | 83.67 / 83.82 |
+| GraphSmile (full) ‡ | IEMOCAP-6 | 72.77 / 72.81 | 71.23 / 71.17 | 84.97 / 85.09 | 83.67 / 83.82 |
 | GraphSmile (full) | IEMOCAP-4 | 86.53 / 86.52 | 86.00 / 85.98 | 87.49 / 87.48 | 85.26 / 85.18 |
 | GraphSmile (full) | MELD | 67.70 / 66.71 | 67.59 / 66.55 | 74.44 / 74.31 | 73.45 / 73.24 |
 | GraphSmile (full) | CMU-MOSEI | 46.82 / 44.93 | 45.10 / 43.96 | 67.73 / 66.73 | 65.27 / 65.61 |
-| No L_s | IEMOCAP-6 | 71.53 / 71.52 | 70.92 / 70.83 | 84.41 / 84.53 | 49.04 / 32.28 |
-| No L_s | IEMOCAP-4 | 85.15 / 85.15 | 85.37 / 85.36 | 85.47 / 85.40 | 18.35 / 10.01 |
-| No L_s | MELD | 67.39 / 66.30 | 67.43 / 66.33 | 73.98 / 73.84 | 19.89 / 6.69 |
-| No L_s | CMU-MOSEI | 45.08 / 43.37 | 45.43 / 44.43 | 66.59 / 65.91 | 23.76 / 13.65 |
+| No L_s | IEMOCAP-6 | 71.53 / 71.52 | 70.92 / 70.83 | not comparable | not comparable |
+| No L_s | IEMOCAP-4 | 85.15 / 85.15 | 85.37 / 85.36 | not comparable | not comparable |
+| No L_s | MELD | 67.39 / 66.30 | 67.43 / 66.33 | not comparable | not comparable |
+| No L_s | CMU-MOSEI | 45.08 / 43.37 | 45.43 / 44.43 | not comparable | not comparable |
 | No L_o | IEMOCAP-6 | 71.41 / 71.42 | 70.92 / 71.02 | 84.10 / 84.18 | 82.26 / 82.45 |
 | No L_o | IEMOCAP-4 | 84.52 / 84.50 | 84.84 / 84.79 | 85.26 / 85.23 | 83.46 / 83.25 |
 | No L_o | MELD | 67.62 / 66.59 | 67.59 / 66.58 | 74.18 / 74.10 | 73.52 / 73.32 |
 | No L_o | CMU-MOSEI | 45.20 / 44.03 | 45.53 / 44.09 | 66.71 / 66.20 | 66.73 / 65.03 |
-| No L_s & L_o | IEMOCAP-6 | 70.67 / 70.49 | 70.06 / 70.01 | 83.30 / 83.54 | 49.04 / 32.28 |
-| No L_s & L_o | IEMOCAP-4 | 84.41 / 84.40 | 85.05 / 85.04 | 85.58 / 85.55 | 15.59 / 4.70 |
-| No L_s & L_o | MELD | 67.55 / 66.43 | 67.51 / 66.40 | 73.91 / 73.77 | 19.96 / 6.64 |
-| No L_s & L_o | CMU-MOSEI | 44.29 / 43.54 | 44.74 / 43.86 | 66.54 / 65.64 | 21.68 / 11.96 |
+| No L_s & L_o | IEMOCAP-6 | 70.67 / 70.49 | 70.06 / 70.01 | not comparable | not comparable |
+| No L_s & L_o | IEMOCAP-4 | 84.41 / 84.40 | 85.05 / 85.04 | not comparable | not comparable |
+| No L_s & L_o | MELD | 67.55 / 66.43 | 67.51 / 66.40 | not comparable | not comparable |
+| No L_s & L_o | CMU-MOSEI | 44.29 / 43.54 | 44.74 / 43.86 | not comparable | not comparable |
 | No Textual | IEMOCAP-6 | 55.70 / 54.23 | 59.33 / 59.34 | 71.04 / 70.42 | 71.16 / 70.97 |
 | No Textual | IEMOCAP-4 | 62.88 / 62.22 | 64.16 / 62.92 | 66.28 / 60.76 | 64.48 / 62.31 |
 | No Textual | MELD | 50.15 / 42.27 | 50.11 / 43.55 | 52.72 / 52.10 | 51.72 / 50.62 |
@@ -164,9 +164,11 @@ MERC columns are emotion ACC / WF1. MSAC columns are sentiment ACC / WF1.
 
 Not reproduced: **No Res, No FC-Res, No Seg** (the code has no switch for these yet).
 
-**Notes on the rows that disagree most**
+**Notes**
+- **MSAC columns use different settings.** The paper's MSAC values in Table VI use the optimized sentiment settings (‡). Our runs use the Table III settings (†). So the MSAC columns are not like-for-like, even for the full model.
+- **Lower block of the paper's Table VI (MSAC):** the paper's rows are No L_e (no emotion loss), No L_o and No L_e & L_o. Our `No L_s` and `No L_s & L_o` runs remove the *sentiment* loss, so their sentiment head is never trained. Their MSAC values are near chance and are marked "not comparable". The paper's No L_e rows are **not run** yet.
+- **No L_o** is the only MSAC ablation that matches a variant we ran. Our value is 82.26 / 82.45 against the paper's 84.10 / 84.18, but see the optimized-settings note above.
 - **No Textual** is higher than the paper for IEMOCAP-6 (59.33 against 55.70). We remove text by zeroing its input. The paper does not say how it removed text, so this difference may come from that choice.
-- **No L_s and No L_s & L_o, MSAC columns** are near chance in our runs. Removing the sentiment loss leaves the sentiment head untrained. The paper reports sentiment numbers for these rows, so its setup must differ. We have not resolved this.
 
 ### Table VII: time and memory (GraphSmile)
 
@@ -197,7 +199,7 @@ The change in L2 moves IEMOCAP-6 by less than 0.2 points, so it does not explain
 2. **Feature files:** we used the feature pickles from the dataset release. The paper's exact files may differ, and this is untested.
 3. **Test-set selection:** the code picks the best epoch by test F1, as described in section 3.
 4. **Missing ablations:** No Res, No FC-Res, and No Seg are not implemented as switches.
-5. **MSAC rows for No L_s**: see the note under Table VI.
+5. **MSAC ablations:** No L_e and No L_e & L_o (paper's lower block of Table VI) are not run. Our No L_s rows are not comparable with the paper's MSAC rows. See the notes under Table VI.
 6. **Figures 4 to 7** are not reproduced yet.
 
 ## 6. Proof and reproducibility
