@@ -61,3 +61,15 @@ python -u run.py --gpu 3 --port 1534 --classify emotion \
 --loss_type emo_sen_sft --lr 8e-05 --batch_size 32 --hidden_dim 256 \
 --win 5 5 --heter_n_layers 2 2 2 --drop 0.4 --shift_win 2 --lambd 1.0 0.8 1.0
 ```
+## Reproduction results
+
+We re-ran GraphSmile on IEMOCAP-6, IEMOCAP-4, MELD and CMU-MOSEI. The full comparison with the paper is in [REPRODUCTION.md](REPRODUCTION.md).
+
+| Dataset | Paper ACC / WF1 | Ours ACC / WF1 |
+|---|---|---|
+| IEMOCAP-6 | 72.77 / 72.81 | 71.23 / 71.17 |
+| IEMOCAP-4 | 86.53 / 86.52 | 86.00 / 85.98 |
+| MELD | 67.70 / 66.71 | 67.59 / 66.55 |
+| CMU-MOSEI | 46.82 / 44.93 | 45.10 / 43.96 |
+
+Each number comes from a log in `results/logs/`, indexed in `results/proof_index.md`. Steps for reproducing the runs are in [RUNBOOK.md](RUNBOOK.md).
