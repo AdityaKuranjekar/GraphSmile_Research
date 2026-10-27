@@ -131,8 +131,9 @@ def table_v():
     for ds, vals in PAPER_TABLE_V.items():
         r = load('full', ds)
         if ds == 'MELD':
-            # Paper columns are neu, pos, neg. Index mapping assumes 0=neg, 1=neu, 2=pos.
-            order = {'neu': 1, 'pos': 2, 'neg': 0}
+            # MELD sentiment index order is 0=neu, 1=pos, 2=neg. This matches the paper's
+            # column order and was confirmed by the per-class values in the logs.
+            order = {'neu': 0, 'pos': 1, 'neg': 2}
             pc = dict(zip(['neu', 'pos', 'neg'], vals['const'][:3]))
         else:
             order = {'neg': 0, 'neu': 1, 'pos': 2}
