@@ -5,6 +5,7 @@
 set -uo pipefail
 
 GPU="${GPU:-0}"
+L2="${L2:-0.001}"   # paper value (Section IV-C); repo default is 1e-4
 LOG_DIR=results/logs
 mkdir -p "$LOG_DIR" results
 
@@ -42,11 +43,12 @@ for ds_spec in "${DATASETS[@]}"; do
     python -u run.py --gpu "$GPU" --port "$PORT" --classify emotion --dataset "$DS" \
       --epochs "$EPOCHS" --textf_mode textf0 --lr "$LR" --batch_size "$BS" \
       --hidden_dim "$HID" --win $WIN --heter_n_layers $HETER --drop "$DROP" \
-      --shift_win "$SHIFT" --lambd $LAMBD $FLAGS > "$LOG" 2>&1 \
+      --shift_win "$SHIFT" --lambd $LAMBD --l2 "$L2" $FLAGS > "$LOG" 2>&1 \
       || { echo "  FAILED: see $LOG"; FAILED+=("$DS/$TAG"); }
   done
 done
 
 echo "Done. Failed runs: ${#FAILED[@]}"
 for f in "${FAILED[@]:-}"; do [ -n "$f" ] && echo "  - $f"; done
-python scripts/summarize.py
+python scripts/compare_to_paper.py > results/comparison.md
+echo "Comparison written to results/comparison.md"

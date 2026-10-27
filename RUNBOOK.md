@@ -122,12 +122,32 @@ A full 120-epoch run on CPU will take a very long time. Use `--epochs 2` to conf
 
 ## 8. Regenerate all tables in one go
 
-`scripts/run_all.sh` runs the full model and the runnable ablations for all four datasets (28 runs, sequential). Logs go to `results/logs/`, and `scripts/summarize.py` builds a markdown table from them.
+`scripts/run_all.sh` runs the full model and the runnable ablations for all four datasets (28 runs, sequential), with L2 = 1e-3 as stated in the paper. Logs go to `results/logs/`. At the end it writes a comparison with the paper's numbers.
 
 ```bash
 cd GraphSmile_Research
-GPU=0 bash scripts/run_all.sh 2>&1 | tee results/run_all.out
-python scripts/summarize.py > results/summary.md
+GPU=4 bash scripts/run_all.sh 2>&1 | tee results/run_all.out
+cat results/comparison.md
 ```
 
-Not included: the "No Res", "No FC-Res" and "No Seg" rows of Table VI. The code has no switches for them, so they need model changes first.
+To regenerate the comparison without rerunning anything: `python scripts/compare_to_paper.py > results/comparison.md`.
+
+`results/comparison.md` contains:
+- Table IV: per-class F1, ACC and WF1 for the four datasets, paper vs ours and the difference.
+- Table V: sentiment (MSAC) per-class F1, ACC and WF1 with the Table III settings.
+- Table VI: modality and loss ablations (MERC and MSAC).
+- Table VII: seconds per epoch and memory.
+
+Not in the comparison: No Res, No FC-Res and No Seg (Table VI), which the code has no switch for; the optimized-hyperparameter MSAC rows (‡); and t-SNE and confusion-matrix figures.
+
+## 9. Extra checks and sweeps (IEMOCAP-6)
+
+`scripts/run_sweeps.sh` runs:
+- an L2 check at 1e-3 versus the repo default of 1e-4,
+- network depth from 1 to 20 layers (paper Fig. 4, GraphSmile curve only),
+- window sizes from 1 to 40 (paper Fig. 5).
+
+```bash
+GPU=4 bash scripts/run_sweeps.sh 2>&1 | tee results/sweeps.out
+cat results/comparison.md
+```

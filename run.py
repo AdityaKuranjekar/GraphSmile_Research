@@ -543,6 +543,12 @@ def main(local_rank):
                                   digits=4,
                                   zero_division=0))
         print(confusion_matrix(best_label_emo, best_pred_emo))
+        print(
+            classification_report(best_label_sen,
+                                  best_pred_sen,
+                                  digits=4,
+                                  zero_division=0))
+        print(confusion_matrix(best_label_sen, best_pred_sen))
 
     dist.destroy_process_group()
 
