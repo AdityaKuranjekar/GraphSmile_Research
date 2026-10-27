@@ -83,6 +83,12 @@ parser.add_argument(
 )
 
 parser.add_argument('--hidden_dim', type=int, default=256, help='hidden_dim')
+parser.add_argument('--no_res', action='store_true', default=False,
+                    help='ablation: no residual connection, use last layer only')
+parser.add_argument('--no_fcres', action='store_true', default=False,
+                    help='ablation: residual connection without the FC layer')
+parser.add_argument('--no_seg', action='store_true', default=False,
+                    help='ablation: shift samples over all utterance pairs, no segmentation')
 parser.add_argument(
     '--win',
     nargs='+',
@@ -121,6 +127,9 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+
+if args.no_seg:
+    args.shift_win = -1  # one window covering the whole dialogue; labels and model agree
 
 if not args.modals or set(args.modals) - set('tva'):
     parser.error("--modals must be a non-empty subset of 't', 'v', 'a'")

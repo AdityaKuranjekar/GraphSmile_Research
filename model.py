@@ -57,6 +57,8 @@ class GraphSmile(nn.Module):
             args.heter_n_layers[0],
             args.drop,
             args.no_cuda,
+            use_res=not args.no_res,
+            use_fc_res=not args.no_fcres,
         )
         hetergconvLayer_ta = HeterGConvLayer(args.hidden_dim, args.drop,
                                              args.no_cuda)
@@ -66,6 +68,8 @@ class GraphSmile(nn.Module):
             args.heter_n_layers[1],
             args.drop,
             args.no_cuda,
+            use_res=not args.no_res,
+            use_fc_res=not args.no_fcres,
         )
         hetergconvLayer_va = HeterGConvLayer(args.hidden_dim, args.drop,
                                              args.no_cuda)
@@ -75,6 +79,8 @@ class GraphSmile(nn.Module):
             args.heter_n_layers[2],
             args.drop,
             args.no_cuda,
+            use_res=not args.no_res,
+            use_fc_res=not args.no_fcres,
         )
 
         self.modal_fusion = nn.Sequential(

@@ -13,10 +13,12 @@ def _get_clones(module, N):
 class HeterGConv_Edge(torch.nn.Module):
 
     def __init__(self, feature_size, encoder_layer, num_layers, dropout,
-                 no_cuda):
+                 no_cuda, use_res=True, use_fc_res=True):
         super(HeterGConv_Edge, self).__init__()
         self.num_layers = num_layers
         self.no_cuda = no_cuda
+        self.use_res = use_res  # False: output only the last layer ("No Res")
+        self.use_fc_res = use_fc_res  # False: residual skips the FC layer ("No FC-Res")
 
         self.edge_weight = None
 
@@ -48,10 +50,18 @@ class HeterGConv_Edge(torch.nn.Module):
             edge_weight,
             num_nodes=feature.size(0),
             no_cuda=self.no_cuda)
-        feature_sum = feature
-        for i in range(self.num_layers):
-            feature = self.hetergcn_layers[i](feature, num_modal, adj_weight)
-            feature_sum = feature_sum + self.fc_layers[i](feature)
+        if self.use_res:
+            feature_sum = feature
+            for i in range(self.num_layers):
+                feature = self.hetergcn_layers[i](feature, num_modal, adj_weight)
+                if self.use_fc_res:
+                    feature_sum = feature_sum + self.fc_layers[i](feature)
+                else:
+                    feature_sum = feature_sum + feature
+        else:
+            for i in range(self.num_layers):
+                feature = self.hetergcn_layers[i](feature, num_modal, adj_weight)
+            feature_sum = feature
         feat_tuple = torch.chunk(feature_sum, num_modal, dim=0)
 
         return feat_tuple, edge_index

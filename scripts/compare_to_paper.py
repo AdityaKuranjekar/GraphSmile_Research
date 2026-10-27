@@ -55,6 +55,17 @@ PAPER_TABLE_VI = {
                   (67.39, 66.26, 73.83, 73.75), (45.32, 43.57, 66.30, 65.81)],
     'no_acoustic': [(68.45, 68.26, 83.24, 82.87), (83.35, 83.28, 84.31, 84.25),
                     (67.55, 66.40, 73.72, 73.62), (46.56, 44.57, 66.47, 65.57)],
+    'no_Res': [(61.98, 61.35, 78.56, 78.25), (79.64, 79.58, 81.02, 80.83),
+               (52.07, 46.24, 58.08, 56.61), (41.75, 40.12, 62.26, 61.06)],
+    'no_FCRes': [(70.43, 70.39, 84.35, 84.38), (85.37, 85.36, 86.00, 85.90),
+                 (67.36, 66.30, 73.72, 73.64), (45.03, 43.28, 66.20, 65.69)],
+    'no_Seg': [(71.66, 71.69, 83.49, 83.64), (85.47, 85.43, 85.37, 85.32),
+               (67.59, 66.59, 74.37, 74.22), (45.89, 44.53, 66.44, 65.88)],
+    # MSAC-only rows in the paper (no MERC value is reported for these)
+    'no_Le': [(None, None, 84.41, 84.53), (None, None, 85.47, 85.40),
+              (None, None, 73.98, 73.84), (None, None, 66.59, 65.91)],
+    'no_Le_Lo': [(None, None, 83.30, 83.54), (None, None, 85.58, 85.55),
+                 (None, None, 73.91, 73.77), (None, None, 66.54, 65.64)],
 }
 
 # Table VII, GraphSmile row: (seconds per epoch, memory MB) per dataset.
@@ -157,24 +168,30 @@ def table_vi():
     headers = ['IEMOCAP-6', 'IEMOCAP-4', 'MELD', 'CMU-MOSEI']
     print('| Variant | Dataset | Paper MERC | Ours MERC | Paper MSAC | Ours MSAC |')
     print('|---|---|---|---|---|---|')
-    # Paper MSAC values for these tags are not comparable (see the notes below).
-    not_comparable = {'no_Ls', 'no_Ls_Lo'}
+    # Our sentiment-loss-off runs have an untrained sentiment head, and our emotion-loss-off
+    # runs have an untrained emotion head, so those values are not comparable.
+    no_sentiment = {'no_Ls', 'no_Ls_Lo'}
+    no_emotion = {'no_Le', 'no_Le_Lo'}
     for tag, rows in PAPER_TABLE_VI.items():
         for ds, h, p in zip(PAPER_TABLE_IV.keys(), headers, rows):
             r = load(tag, ds)
-            ours_m = f"{fmt(r['acc_emo'])} / {fmt(r['f1_emo'])}" if r else 'not run'
-            if tag in not_comparable:
+            paper_m = 'n/a' if p[0] is None else f'{p[0]:.2f} / {p[1]:.2f}'
+            if tag in no_emotion:
+                ours_m = 'not comparable'
+            else:
+                ours_m = f"{fmt(r['acc_emo'])} / {fmt(r['f1_emo'])}" if r else 'not run'
+            if tag in no_sentiment:
                 paper_s, ours_s = 'not comparable', 'not comparable'
             else:
                 paper_s = f'{p[2]:.2f} / {p[3]:.2f}'
                 ours_s = f"{fmt(r['acc_sen'])} / {fmt(r['f1_sen'])}" if r else 'not run'
-            print(f'| {tag} | {h} | {p[0]:.2f} / {p[1]:.2f} | {ours_m} | {paper_s} | {ours_s} |')
+            print(f'| {tag} | {h} | {paper_m} | {ours_m} | {paper_s} | {ours_s} |')
     print('\nNotes:')
     print('- Paper Table VI lower block (MSAC) uses No L_e / No L_o / No L_e & L_o. Our `no_Ls` and '
           '`no_Ls_Lo` runs remove the sentiment loss, so they are not comparable with the MSAC rows.')
     print('- Paper Table VI MSAC values use the optimized sentiment settings (‡); our runs use '
           'the Table III settings (†).')
-    print('- Not run: No L_e and No L_e & L_o (MSAC), No Res, No FC-Res, No Seg.\n')
+    print('- No Res, No FC-Res and No Seg are run with the flags --no_res, --no_fcres and --no_seg.\n')
 
 
 def table_vii():
