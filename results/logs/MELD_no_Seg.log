@@ -1,0 +1,372 @@
+Namespace(no_cuda=False, gpu='4', port='15513', classify='emotion', lr=7e-05, l2=0.001, batch_size=16, epochs=50, tensorboard=False, modals='tva', dataset='MELD', textf_mode='textf0', conv_fpo=[3, 1, 1], hidden_dim=384, no_res=False, no_fcres=False, no_seg=True, win=[3, 3], heter_n_layers=[5, 5, 5], drop=0.2, shift_win=-1, loss_type='emo_sen_sft', lambd=[1.0, 0.5, 0.2])
+torch.cuda.is_available(): True
+not args.no_cuda: True
+Use 1 GPUs
+INFO:torch.distributed.distributed_c10d:Added key: store_based_barrier_key:1 to store for rank: 0
+INFO:torch.distributed.distributed_c10d:Rank 0: Completed store-based barrier for key:store_based_barrier_key:1 with 1 nodes.
+[W reducer.cpp:1300] Warning: find_unused_parameters=True was specified in DDP constructor, but did not find any unused parameters in the forward pass. This flag results in an extra traversal of the autograd graph every iteration,  which can adversely affect performance. If your model indeed never has any unused parameters in the forward pass, consider turning this flag off. Note that this warning may be a false positive if your model has flow control causing later iterations to have unused parameters. (function operator())
+Running main(**args) on rank 0.
+epoch: 1, train_loss: 1.9198, train_acc_emo: 55.06, train_f1_emo: 47.81, valid_loss: 1.4006, valid_acc_emo: 73.11, valid_f1_emo: 68.89
+test_loss: 1.5258, test_acc_emo: 65.36, test_f1_emo: 60.66, test_acc_sen: 72.49, test_f1_sen: 71.9, test_acc_sft: 54.66, test_f1_sft: 54.66, total time: 16.11 sec, 2026-10-28 06:32:19
+----------------------------------------------------------------------------------------------------
+epoch: 2, train_loss: 1.3136, train_acc_emo: 71.96, train_f1_emo: 68.96, valid_loss: 1.218, valid_acc_emo: 75.07, valid_f1_emo: 72.65
+test_loss: 1.445, test_acc_emo: 66.74, test_f1_emo: 64.46, test_acc_sen: 73.14, test_f1_sen: 72.92, test_acc_sft: 57.62, test_f1_sft: 57.4, total time: 12.21 sec, 2026-10-28 06:32:32
+----------------------------------------------------------------------------------------------------
+Allocated Memory: 137.02 MB
+Reserved Memory: 310.00 MB
+All Memory: 447.02 MB
+epoch: 3, train_loss: 1.2373, train_acc_emo: 73.31, train_f1_emo: 71.01, valid_loss: 1.1811, valid_acc_emo: 74.51, valid_f1_emo: 72.37
+test_loss: 1.4309, test_acc_emo: 66.59, test_f1_emo: 64.77, test_acc_sen: 73.22, test_f1_sen: 73.04, test_acc_sft: 56.32, test_f1_sft: 56.27, total time: 14.06 sec, 2026-10-28 06:32:46
+----------------------------------------------------------------------------------------------------
+epoch: 4, train_loss: 1.2029, train_acc_emo: 74.02, train_f1_emo: 72.2, valid_loss: 1.1584, valid_acc_emo: 75.26, valid_f1_emo: 73.5
+test_loss: 1.4241, test_acc_emo: 66.78, test_f1_emo: 65.18, test_acc_sen: 73.45, test_f1_sen: 73.26, test_acc_sft: 56.37, test_f1_sft: 56.34, total time: 13.29 sec, 2026-10-28 06:33:00
+----------------------------------------------------------------------------------------------------
+epoch: 5, train_loss: 1.1768, train_acc_emo: 74.55, train_f1_emo: 73.11, valid_loss: 1.142, valid_acc_emo: 75.63, valid_f1_emo: 74.32
+test_loss: 1.4198, test_acc_emo: 66.78, test_f1_emo: 65.42, test_acc_sen: 73.52, test_f1_sen: 73.32, test_acc_sft: 56.93, test_f1_sft: 56.9, total time: 11.85 sec, 2026-10-28 06:33:12
+----------------------------------------------------------------------------------------------------
+epoch: 6, train_loss: 1.154, train_acc_emo: 75.15, train_f1_emo: 73.96, valid_loss: 1.1281, valid_acc_emo: 76.66, valid_f1_emo: 75.76
+test_loss: 1.4173, test_acc_emo: 67.09, test_f1_emo: 65.93, test_acc_sen: 73.45, test_f1_sen: 73.24, test_acc_sft: 57.27, test_f1_sft: 57.24, total time: 12.17 sec, 2026-10-28 06:33:24
+----------------------------------------------------------------------------------------------------
+epoch: 7, train_loss: 1.133, train_acc_emo: 75.66, train_f1_emo: 74.69, valid_loss: 1.1169, valid_acc_emo: 77.03, valid_f1_emo: 76.29
+test_loss: 1.4165, test_acc_emo: 67.66, test_f1_emo: 66.64, test_acc_sen: 73.41, test_f1_sen: 73.2, test_acc_sft: 57.44, test_f1_sft: 57.41, total time: 13.23 sec, 2026-10-28 06:33:38
+----------------------------------------------------------------------------------------------------
+epoch: 8, train_loss: 1.1129, train_acc_emo: 76.2, train_f1_emo: 75.32, valid_loss: 1.1054, valid_acc_emo: 77.68, valid_f1_emo: 77.11
+test_loss: 1.4164, test_acc_emo: 67.62, test_f1_emo: 66.62, test_acc_sen: 73.52, test_f1_sen: 73.31, test_acc_sft: 57.39, test_f1_sft: 57.39, total time: 10.86 sec, 2026-10-28 06:33:49
+----------------------------------------------------------------------------------------------------
+epoch: 9, train_loss: 1.093, train_acc_emo: 76.54, train_f1_emo: 75.75, valid_loss: 1.0938, valid_acc_emo: 77.78, valid_f1_emo: 77.25
+test_loss: 1.4169, test_acc_emo: 67.51, test_f1_emo: 66.49, test_acc_sen: 73.56, test_f1_sen: 73.36, test_acc_sft: 57.36, test_f1_sft: 57.36, total time: 14.89 sec, 2026-10-28 06:34:04
+----------------------------------------------------------------------------------------------------
+epoch: 10, train_loss: 1.0728, train_acc_emo: 76.92, train_f1_emo: 76.16, valid_loss: 1.0828, valid_acc_emo: 77.78, valid_f1_emo: 77.24
+test_loss: 1.4189, test_acc_emo: 67.36, test_f1_emo: 66.32, test_acc_sen: 73.6, test_f1_sen: 73.4, test_acc_sft: 57.06, test_f1_sft: 57.06, total time: 11.72 sec, 2026-10-28 06:34:16
+----------------------------------------------------------------------------------------------------
+              precision    recall  f1-score   support
+
+           0     0.7621    0.8495    0.8035      1256
+           1     0.6069    0.5658    0.5856       281
+           2     0.3043    0.1400    0.1918        50
+           3     0.5200    0.3750    0.4358       208
+           4     0.6863    0.6095    0.6456       402
+           5     0.4048    0.2500    0.3091        68
+           6     0.5133    0.5594    0.5354       345
+
+    accuracy                         0.6766      2610
+   macro avg     0.5425    0.4785    0.5010      2610
+weighted avg     0.6635    0.6766    0.6664      2610
+
+[[1067   31    5   33   60    5   55]
+ [  48  159    1    4   23    3   43]
+ [  20    4    7    9    2    1    7]
+ [  70   12    3   78    9    4   32]
+ [  97   23    1    6  245    2   28]
+ [  23    3    2    4    1   17   18]
+ [  75   30    4   16   17   10  193]]
+              precision    recall  f1-score   support
+
+           0     0.7808    0.8025    0.7915      1256
+           1     0.7487    0.5605    0.6411       521
+           2     0.6631    0.7395    0.6992       833
+
+    accuracy                         0.7341      2610
+   macro avg     0.7309    0.7008    0.7106      2610
+weighted avg     0.7368    0.7341    0.7320      2610
+
+[[1008   57  191]
+ [ 107  292  122]
+ [ 176   41  616]]
+----------------------------------------------------------------------------------------------------
+epoch: 11, train_loss: 1.0523, train_acc_emo: 77.4, train_f1_emo: 76.7, valid_loss: 1.0718, valid_acc_emo: 78.06, valid_f1_emo: 77.54
+test_loss: 1.4224, test_acc_emo: 66.82, test_f1_emo: 65.82, test_acc_sen: 73.22, test_f1_sen: 73.0, test_acc_sft: 56.89, test_f1_sft: 56.88, total time: 10.47 sec, 2026-10-28 06:34:27
+----------------------------------------------------------------------------------------------------
+epoch: 12, train_loss: 1.0311, train_acc_emo: 77.84, train_f1_emo: 77.16, valid_loss: 1.0643, valid_acc_emo: 77.96, valid_f1_emo: 77.47
+test_loss: 1.4301, test_acc_emo: 67.01, test_f1_emo: 66.02, test_acc_sen: 73.03, test_f1_sen: 72.79, test_acc_sft: 56.56, test_f1_sft: 56.5, total time: 11.58 sec, 2026-10-28 06:34:39
+----------------------------------------------------------------------------------------------------
+epoch: 13, train_loss: 1.0091, train_acc_emo: 78.3, train_f1_emo: 77.66, valid_loss: 1.0561, valid_acc_emo: 77.87, valid_f1_emo: 77.34
+test_loss: 1.4388, test_acc_emo: 66.63, test_f1_emo: 65.71, test_acc_sen: 72.87, test_f1_sen: 72.6, test_acc_sft: 56.6, test_f1_sft: 56.52, total time: 12.38 sec, 2026-10-28 06:34:52
+----------------------------------------------------------------------------------------------------
+epoch: 14, train_loss: 0.9848, train_acc_emo: 78.8, train_f1_emo: 78.2, valid_loss: 1.0397, valid_acc_emo: 78.34, valid_f1_emo: 77.78
+test_loss: 1.4461, test_acc_emo: 66.44, test_f1_emo: 65.49, test_acc_sen: 72.72, test_f1_sen: 72.44, test_acc_sft: 56.28, test_f1_sft: 56.17, total time: 11.87 sec, 2026-10-28 06:35:04
+----------------------------------------------------------------------------------------------------
+epoch: 15, train_loss: 0.9561, train_acc_emo: 79.42, train_f1_emo: 78.85, valid_loss: 1.0183, valid_acc_emo: 78.99, valid_f1_emo: 78.52
+test_loss: 1.4544, test_acc_emo: 66.05, test_f1_emo: 65.18, test_acc_sen: 73.07, test_f1_sen: 72.84, test_acc_sft: 56.17, test_f1_sft: 56.11, total time: 11.02 sec, 2026-10-28 06:35:15
+----------------------------------------------------------------------------------------------------
+epoch: 16, train_loss: 0.9245, train_acc_emo: 80.3, train_f1_emo: 79.78, valid_loss: 1.0007, valid_acc_emo: 79.83, valid_f1_emo: 79.51
+test_loss: 1.4692, test_acc_emo: 66.13, test_f1_emo: 65.28, test_acc_sen: 73.3, test_f1_sen: 73.17, test_acc_sft: 56.54, test_f1_sft: 56.52, total time: 10.25 sec, 2026-10-28 06:35:26
+----------------------------------------------------------------------------------------------------
+epoch: 17, train_loss: 0.8934, train_acc_emo: 81.14, train_f1_emo: 80.64, valid_loss: 0.9958, valid_acc_emo: 79.37, valid_f1_emo: 79.05
+test_loss: 1.4929, test_acc_emo: 65.79, test_f1_emo: 64.96, test_acc_sen: 73.1, test_f1_sen: 72.93, test_acc_sft: 56.15, test_f1_sft: 56.09, total time: 13.41 sec, 2026-10-28 06:35:40
+----------------------------------------------------------------------------------------------------
+epoch: 18, train_loss: 0.861, train_acc_emo: 81.94, train_f1_emo: 81.48, valid_loss: 0.9781, valid_acc_emo: 79.46, valid_f1_emo: 79.24
+test_loss: 1.5119, test_acc_emo: 65.63, test_f1_emo: 64.97, test_acc_sen: 73.22, test_f1_sen: 73.13, test_acc_sft: 56.21, test_f1_sft: 56.15, total time: 13.4 sec, 2026-10-28 06:35:53
+----------------------------------------------------------------------------------------------------
+epoch: 19, train_loss: 0.8275, train_acc_emo: 83.04, train_f1_emo: 82.6, valid_loss: 0.9589, valid_acc_emo: 80.11, valid_f1_emo: 79.89
+test_loss: 1.534, test_acc_emo: 65.44, test_f1_emo: 64.74, test_acc_sen: 72.99, test_f1_sen: 72.95, test_acc_sft: 56.47, test_f1_sft: 56.45, total time: 12.57 sec, 2026-10-28 06:36:06
+----------------------------------------------------------------------------------------------------
+epoch: 20, train_loss: 0.7915, train_acc_emo: 83.84, train_f1_emo: 83.43, valid_loss: 0.945, valid_acc_emo: 80.11, valid_f1_emo: 79.79
+test_loss: 1.5596, test_acc_emo: 65.86, test_f1_emo: 64.96, test_acc_sen: 72.61, test_f1_sen: 72.46, test_acc_sft: 56.66, test_f1_sft: 56.65, total time: 14.23 sec, 2026-10-28 06:36:21
+----------------------------------------------------------------------------------------------------
+              precision    recall  f1-score   support
+
+           0     0.7621    0.8495    0.8035      1256
+           1     0.6069    0.5658    0.5856       281
+           2     0.3043    0.1400    0.1918        50
+           3     0.5200    0.3750    0.4358       208
+           4     0.6863    0.6095    0.6456       402
+           5     0.4048    0.2500    0.3091        68
+           6     0.5133    0.5594    0.5354       345
+
+    accuracy                         0.6766      2610
+   macro avg     0.5425    0.4785    0.5010      2610
+weighted avg     0.6635    0.6766    0.6664      2610
+
+[[1067   31    5   33   60    5   55]
+ [  48  159    1    4   23    3   43]
+ [  20    4    7    9    2    1    7]
+ [  70   12    3   78    9    4   32]
+ [  97   23    1    6  245    2   28]
+ [  23    3    2    4    1   17   18]
+ [  75   30    4   16   17   10  193]]
+              precision    recall  f1-score   support
+
+           0     0.7808    0.8025    0.7915      1256
+           1     0.7487    0.5605    0.6411       521
+           2     0.6631    0.7395    0.6992       833
+
+    accuracy                         0.7341      2610
+   macro avg     0.7309    0.7008    0.7106      2610
+weighted avg     0.7368    0.7341    0.7320      2610
+
+[[1008   57  191]
+ [ 107  292  122]
+ [ 176   41  616]]
+----------------------------------------------------------------------------------------------------
+epoch: 21, train_loss: 0.7552, train_acc_emo: 84.6, train_f1_emo: 84.23, valid_loss: 0.9462, valid_acc_emo: 80.02, valid_f1_emo: 79.46
+test_loss: 1.5981, test_acc_emo: 65.94, test_f1_emo: 64.7, test_acc_sen: 72.91, test_f1_sen: 72.6, test_acc_sft: 55.04, test_f1_sft: 54.22, total time: 11.81 sec, 2026-10-28 06:36:33
+----------------------------------------------------------------------------------------------------
+epoch: 22, train_loss: 0.7218, train_acc_emo: 85.38, train_f1_emo: 85.01, valid_loss: 0.9526, valid_acc_emo: 80.02, valid_f1_emo: 79.38
+test_loss: 1.6427, test_acc_emo: 65.86, test_f1_emo: 64.53, test_acc_sen: 72.95, test_f1_sen: 72.55, test_acc_sft: 54.0, test_f1_sft: 52.26, total time: 13.88 sec, 2026-10-28 06:36:47
+----------------------------------------------------------------------------------------------------
+epoch: 23, train_loss: 0.7019, train_acc_emo: 86.04, train_f1_emo: 85.69, valid_loss: 1.0247, valid_acc_emo: 78.62, valid_f1_emo: 78.82
+test_loss: 1.6713, test_acc_emo: 64.6, test_f1_emo: 64.2, test_acc_sen: 71.72, test_f1_sen: 71.41, test_acc_sft: 54.6, test_f1_sft: 52.75, total time: 13.23 sec, 2026-10-28 06:37:01
+----------------------------------------------------------------------------------------------------
+epoch: 24, train_loss: 0.6899, train_acc_emo: 86.52, train_f1_emo: 86.17, valid_loss: 0.9992, valid_acc_emo: 79.55, valid_f1_emo: 80.04
+test_loss: 1.6892, test_acc_emo: 63.87, test_f1_emo: 64.34, test_acc_sen: 71.65, test_f1_sen: 71.81, test_acc_sft: 56.26, test_f1_sft: 55.54, total time: 13.01 sec, 2026-10-28 06:37:14
+----------------------------------------------------------------------------------------------------
+epoch: 25, train_loss: 0.6914, train_acc_emo: 86.09, train_f1_emo: 85.76, valid_loss: 0.9516, valid_acc_emo: 79.46, valid_f1_emo: 79.85
+test_loss: 1.6427, test_acc_emo: 64.48, test_f1_emo: 64.61, test_acc_sen: 72.49, test_f1_sen: 72.54, test_acc_sft: 58.95, test_f1_sft: 58.94, total time: 13.24 sec, 2026-10-28 06:37:28
+----------------------------------------------------------------------------------------------------
+epoch: 26, train_loss: 0.6584, train_acc_emo: 87.42, train_f1_emo: 87.15, valid_loss: 1.0441, valid_acc_emo: 78.71, valid_f1_emo: 79.44
+test_loss: 1.7336, test_acc_emo: 62.95, test_f1_emo: 63.57, test_acc_sen: 70.31, test_f1_sen: 70.29, test_acc_sft: 58.98, test_f1_sft: 58.85, total time: 13.58 sec, 2026-10-28 06:37:42
+----------------------------------------------------------------------------------------------------
+epoch: 27, train_loss: 0.6471, train_acc_emo: 87.85, train_f1_emo: 87.59, valid_loss: 0.9379, valid_acc_emo: 80.11, valid_f1_emo: 80.5
+test_loss: 1.6873, test_acc_emo: 63.91, test_f1_emo: 64.24, test_acc_sen: 72.18, test_f1_sen: 72.28, test_acc_sft: 57.95, test_f1_sft: 57.96, total time: 11.74 sec, 2026-10-28 06:37:54
+----------------------------------------------------------------------------------------------------
+epoch: 28, train_loss: 0.655, train_acc_emo: 87.54, train_f1_emo: 87.29, valid_loss: 1.083, valid_acc_emo: 78.15, valid_f1_emo: 79.03
+test_loss: 1.8296, test_acc_emo: 62.34, test_f1_emo: 63.1, test_acc_sen: 69.66, test_f1_sen: 69.66, test_acc_sft: 56.69, test_f1_sft: 56.27, total time: 13.24 sec, 2026-10-28 06:38:07
+----------------------------------------------------------------------------------------------------
+epoch: 29, train_loss: 0.6665, train_acc_emo: 86.85, train_f1_emo: 86.58, valid_loss: 1.0201, valid_acc_emo: 78.71, valid_f1_emo: 78.86
+test_loss: 1.7249, test_acc_emo: 64.48, test_f1_emo: 64.1, test_acc_sen: 71.42, test_f1_sen: 71.08, test_acc_sft: 58.95, test_f1_sft: 58.81, total time: 14.13 sec, 2026-10-28 06:38:22
+----------------------------------------------------------------------------------------------------
+epoch: 30, train_loss: 0.6579, train_acc_emo: 87.06, train_f1_emo: 86.84, valid_loss: 0.911, valid_acc_emo: 80.95, valid_f1_emo: 80.85
+test_loss: 1.6885, test_acc_emo: 65.25, test_f1_emo: 64.52, test_acc_sen: 72.41, test_f1_sen: 72.15, test_acc_sft: 56.08, test_f1_sft: 55.37, total time: 12.94 sec, 2026-10-28 06:38:35
+----------------------------------------------------------------------------------------------------
+              precision    recall  f1-score   support
+
+           0     0.7621    0.8495    0.8035      1256
+           1     0.6069    0.5658    0.5856       281
+           2     0.3043    0.1400    0.1918        50
+           3     0.5200    0.3750    0.4358       208
+           4     0.6863    0.6095    0.6456       402
+           5     0.4048    0.2500    0.3091        68
+           6     0.5133    0.5594    0.5354       345
+
+    accuracy                         0.6766      2610
+   macro avg     0.5425    0.4785    0.5010      2610
+weighted avg     0.6635    0.6766    0.6664      2610
+
+[[1067   31    5   33   60    5   55]
+ [  48  159    1    4   23    3   43]
+ [  20    4    7    9    2    1    7]
+ [  70   12    3   78    9    4   32]
+ [  97   23    1    6  245    2   28]
+ [  23    3    2    4    1   17   18]
+ [  75   30    4   16   17   10  193]]
+              precision    recall  f1-score   support
+
+           0     0.7808    0.8025    0.7915      1256
+           1     0.7487    0.5605    0.6411       521
+           2     0.6631    0.7395    0.6992       833
+
+    accuracy                         0.7341      2610
+   macro avg     0.7309    0.7008    0.7106      2610
+weighted avg     0.7368    0.7341    0.7320      2610
+
+[[1008   57  191]
+ [ 107  292  122]
+ [ 176   41  616]]
+----------------------------------------------------------------------------------------------------
+epoch: 31, train_loss: 0.6073, train_acc_emo: 88.92, train_f1_emo: 88.73, valid_loss: 0.8897, valid_acc_emo: 81.61, valid_f1_emo: 81.69
+test_loss: 1.6947, test_acc_emo: 65.29, test_f1_emo: 64.87, test_acc_sen: 72.41, test_f1_sen: 72.31, test_acc_sft: 57.73, test_f1_sft: 57.67, total time: 11.72 sec, 2026-10-28 06:38:47
+----------------------------------------------------------------------------------------------------
+epoch: 32, train_loss: 0.5626, train_acc_emo: 90.25, train_f1_emo: 90.09, valid_loss: 0.9017, valid_acc_emo: 80.86, valid_f1_emo: 80.97
+test_loss: 1.7333, test_acc_emo: 64.79, test_f1_emo: 64.49, test_acc_sen: 72.03, test_f1_sen: 71.93, test_acc_sft: 56.11, test_f1_sft: 55.41, total time: 12.06 sec, 2026-10-28 06:38:59
+----------------------------------------------------------------------------------------------------
+epoch: 33, train_loss: 0.5281, train_acc_emo: 91.4, train_f1_emo: 91.25, valid_loss: 0.9198, valid_acc_emo: 80.39, valid_f1_emo: 80.59
+test_loss: 1.7745, test_acc_emo: 64.71, test_f1_emo: 64.43, test_acc_sen: 71.8, test_f1_sen: 71.65, test_acc_sft: 54.25, test_f1_sft: 52.18, total time: 11.69 sec, 2026-10-28 06:39:11
+----------------------------------------------------------------------------------------------------
+epoch: 34, train_loss: 0.497, train_acc_emo: 92.26, train_f1_emo: 92.13, valid_loss: 0.9381, valid_acc_emo: 80.21, valid_f1_emo: 80.43
+test_loss: 1.8139, test_acc_emo: 64.52, test_f1_emo: 64.18, test_acc_sen: 71.8, test_f1_sen: 71.61, test_acc_sft: 54.84, test_f1_sft: 53.23, total time: 11.85 sec, 2026-10-28 06:39:23
+----------------------------------------------------------------------------------------------------
+epoch: 35, train_loss: 0.4691, train_acc_emo: 93.08, train_f1_emo: 92.96, valid_loss: 0.9503, valid_acc_emo: 79.93, valid_f1_emo: 80.19
+test_loss: 1.8556, test_acc_emo: 64.44, test_f1_emo: 64.17, test_acc_sen: 71.46, test_f1_sen: 71.24, test_acc_sft: 56.16, test_f1_sft: 55.55, total time: 13.01 sec, 2026-10-28 06:39:37
+----------------------------------------------------------------------------------------------------
+epoch: 36, train_loss: 0.4454, train_acc_emo: 93.76, train_f1_emo: 93.66, valid_loss: 0.9568, valid_acc_emo: 79.74, valid_f1_emo: 80.0
+test_loss: 1.891, test_acc_emo: 64.18, test_f1_emo: 63.96, test_acc_sen: 71.38, test_f1_sen: 71.19, test_acc_sft: 57.78, test_f1_sft: 57.72, total time: 10.16 sec, 2026-10-28 06:39:47
+----------------------------------------------------------------------------------------------------
+epoch: 37, train_loss: 0.4247, train_acc_emo: 94.37, train_f1_emo: 94.29, valid_loss: 0.9639, valid_acc_emo: 80.11, valid_f1_emo: 80.41
+test_loss: 1.9256, test_acc_emo: 63.98, test_f1_emo: 63.75, test_acc_sen: 71.26, test_f1_sen: 71.05, test_acc_sft: 58.26, test_f1_sft: 58.27, total time: 10.57 sec, 2026-10-28 06:39:58
+----------------------------------------------------------------------------------------------------
+epoch: 38, train_loss: 0.4059, train_acc_emo: 94.87, train_f1_emo: 94.79, valid_loss: 0.9749, valid_acc_emo: 79.55, valid_f1_emo: 79.86
+test_loss: 1.9666, test_acc_emo: 64.02, test_f1_emo: 63.81, test_acc_sen: 71.15, test_f1_sen: 70.87, test_acc_sft: 58.41, test_f1_sft: 58.42, total time: 13.45 sec, 2026-10-28 06:40:12
+----------------------------------------------------------------------------------------------------
+epoch: 39, train_loss: 0.3884, train_acc_emo: 95.21, train_f1_emo: 95.14, valid_loss: 0.9836, valid_acc_emo: 79.37, valid_f1_emo: 79.62
+test_loss: 2.0041, test_acc_emo: 64.18, test_f1_emo: 63.87, test_acc_sen: 71.34, test_f1_sen: 71.01, test_acc_sft: 58.47, test_f1_sft: 58.48, total time: 13.51 sec, 2026-10-28 06:40:25
+----------------------------------------------------------------------------------------------------
+epoch: 40, train_loss: 0.3725, train_acc_emo: 95.71, train_f1_emo: 95.66, valid_loss: 0.9979, valid_acc_emo: 79.18, valid_f1_emo: 79.42
+test_loss: 2.0467, test_acc_emo: 64.41, test_f1_emo: 64.04, test_acc_sen: 71.46, test_f1_sen: 71.06, test_acc_sft: 58.59, test_f1_sft: 58.53, total time: 11.34 sec, 2026-10-28 06:40:37
+----------------------------------------------------------------------------------------------------
+              precision    recall  f1-score   support
+
+           0     0.7621    0.8495    0.8035      1256
+           1     0.6069    0.5658    0.5856       281
+           2     0.3043    0.1400    0.1918        50
+           3     0.5200    0.3750    0.4358       208
+           4     0.6863    0.6095    0.6456       402
+           5     0.4048    0.2500    0.3091        68
+           6     0.5133    0.5594    0.5354       345
+
+    accuracy                         0.6766      2610
+   macro avg     0.5425    0.4785    0.5010      2610
+weighted avg     0.6635    0.6766    0.6664      2610
+
+[[1067   31    5   33   60    5   55]
+ [  48  159    1    4   23    3   43]
+ [  20    4    7    9    2    1    7]
+ [  70   12    3   78    9    4   32]
+ [  97   23    1    6  245    2   28]
+ [  23    3    2    4    1   17   18]
+ [  75   30    4   16   17   10  193]]
+              precision    recall  f1-score   support
+
+           0     0.7808    0.8025    0.7915      1256
+           1     0.7487    0.5605    0.6411       521
+           2     0.6631    0.7395    0.6992       833
+
+    accuracy                         0.7341      2610
+   macro avg     0.7309    0.7008    0.7106      2610
+weighted avg     0.7368    0.7341    0.7320      2610
+
+[[1008   57  191]
+ [ 107  292  122]
+ [ 176   41  616]]
+----------------------------------------------------------------------------------------------------
+epoch: 41, train_loss: 0.358, train_acc_emo: 96.12, train_f1_emo: 96.07, valid_loss: 1.0171, valid_acc_emo: 79.55, valid_f1_emo: 79.79
+test_loss: 2.0928, test_acc_emo: 64.67, test_f1_emo: 64.27, test_acc_sen: 71.46, test_f1_sen: 71.01, test_acc_sft: 58.66, test_f1_sft: 58.57, total time: 13.97 sec, 2026-10-28 06:40:51
+----------------------------------------------------------------------------------------------------
+epoch: 42, train_loss: 0.3457, train_acc_emo: 96.47, train_f1_emo: 96.43, valid_loss: 1.0389, valid_acc_emo: 79.46, valid_f1_emo: 79.68
+test_loss: 2.1428, test_acc_emo: 64.94, test_f1_emo: 64.51, test_acc_sen: 71.61, test_f1_sen: 71.13, test_acc_sft: 58.59, test_f1_sft: 58.54, total time: 13.67 sec, 2026-10-28 06:41:05
+----------------------------------------------------------------------------------------------------
+epoch: 43, train_loss: 0.3346, train_acc_emo: 96.83, train_f1_emo: 96.8, valid_loss: 1.0701, valid_acc_emo: 79.37, valid_f1_emo: 79.45
+test_loss: 2.1971, test_acc_emo: 64.75, test_f1_emo: 64.32, test_acc_sen: 71.65, test_f1_sen: 71.17, test_acc_sft: 58.56, test_f1_sft: 58.5, total time: 13.16 sec, 2026-10-28 06:41:19
+----------------------------------------------------------------------------------------------------
+epoch: 44, train_loss: 0.3277, train_acc_emo: 96.88, train_f1_emo: 96.85, valid_loss: 1.1146, valid_acc_emo: 78.34, valid_f1_emo: 78.33
+test_loss: 2.2571, test_acc_emo: 64.9, test_f1_emo: 64.45, test_acc_sen: 71.34, test_f1_sen: 70.78, test_acc_sft: 58.61, test_f1_sft: 58.57, total time: 14.06 sec, 2026-10-28 06:41:33
+----------------------------------------------------------------------------------------------------
+epoch: 45, train_loss: 0.3266, train_acc_emo: 96.87, train_f1_emo: 96.84, valid_loss: 1.1683, valid_acc_emo: 77.68, valid_f1_emo: 77.68
+test_loss: 2.334, test_acc_emo: 64.75, test_f1_emo: 64.18, test_acc_sen: 71.23, test_f1_sen: 70.61, test_acc_sft: 58.11, test_f1_sft: 58.12, total time: 12.04 sec, 2026-10-28 06:41:45
+----------------------------------------------------------------------------------------------------
+epoch: 46, train_loss: 0.3388, train_acc_emo: 95.94, train_f1_emo: 95.9, valid_loss: 1.2998, valid_acc_emo: 76.47, valid_f1_emo: 76.92
+test_loss: 2.4527, test_acc_emo: 63.26, test_f1_emo: 62.9, test_acc_sen: 70.42, test_f1_sen: 69.89, test_acc_sft: 57.65, test_f1_sft: 57.64, total time: 14.35 sec, 2026-10-28 06:42:00
+----------------------------------------------------------------------------------------------------
+epoch: 47, train_loss: 0.3953, train_acc_emo: 93.3, train_f1_emo: 93.24, valid_loss: 1.7808, valid_acc_emo: 69.93, valid_f1_emo: 71.96
+test_loss: 2.8103, test_acc_emo: 59.39, test_f1_emo: 59.96, test_acc_sen: 68.97, test_f1_sen: 68.59, test_acc_sft: 51.59, test_f1_sft: 46.07, total time: 13.0 sec, 2026-10-28 06:42:13
+----------------------------------------------------------------------------------------------------
+epoch: 48, train_loss: 0.4751, train_acc_emo: 91.45, train_f1_emo: 91.37, valid_loss: 1.3003, valid_acc_emo: 76.1, valid_f1_emo: 77.65
+test_loss: 2.5103, test_acc_emo: 60.04, test_f1_emo: 61.81, test_acc_sen: 68.97, test_f1_sen: 69.22, test_acc_sft: 54.83, test_f1_sft: 53.15, total time: 13.09 sec, 2026-10-28 06:42:27
+----------------------------------------------------------------------------------------------------
+epoch: 49, train_loss: 0.6071, train_acc_emo: 88.99, train_f1_emo: 88.88, valid_loss: 1.2092, valid_acc_emo: 77.87, valid_f1_emo: 78.79
+test_loss: 2.3746, test_acc_emo: 61.57, test_f1_emo: 62.74, test_acc_sen: 71.3, test_f1_sen: 71.39, test_acc_sft: 58.82, test_f1_sft: 57.5, total time: 14.03 sec, 2026-10-28 06:42:41
+----------------------------------------------------------------------------------------------------
+epoch: 50, train_loss: 0.5559, train_acc_emo: 89.82, train_f1_emo: 89.71, valid_loss: 0.9685, valid_acc_emo: 81.23, valid_f1_emo: 81.37
+test_loss: 2.0395, test_acc_emo: 65.56, test_f1_emo: 65.19, test_acc_sen: 72.57, test_f1_sen: 72.37, test_acc_sft: 58.44, test_f1_sft: 58.37, total time: 14.03 sec, 2026-10-28 06:42:55
+----------------------------------------------------------------------------------------------------
+              precision    recall  f1-score   support
+
+           0     0.7621    0.8495    0.8035      1256
+           1     0.6069    0.5658    0.5856       281
+           2     0.3043    0.1400    0.1918        50
+           3     0.5200    0.3750    0.4358       208
+           4     0.6863    0.6095    0.6456       402
+           5     0.4048    0.2500    0.3091        68
+           6     0.5133    0.5594    0.5354       345
+
+    accuracy                         0.6766      2610
+   macro avg     0.5425    0.4785    0.5010      2610
+weighted avg     0.6635    0.6766    0.6664      2610
+
+[[1067   31    5   33   60    5   55]
+ [  48  159    1    4   23    3   43]
+ [  20    4    7    9    2    1    7]
+ [  70   12    3   78    9    4   32]
+ [  97   23    1    6  245    2   28]
+ [  23    3    2    4    1   17   18]
+ [  75   30    4   16   17   10  193]]
+              precision    recall  f1-score   support
+
+           0     0.7808    0.8025    0.7915      1256
+           1     0.7487    0.5605    0.6411       521
+           2     0.6631    0.7395    0.6992       833
+
+    accuracy                         0.7341      2610
+   macro avg     0.7309    0.7008    0.7106      2610
+weighted avg     0.7368    0.7341    0.7320      2610
+
+[[1008   57  191]
+ [ 107  292  122]
+ [ 176   41  616]]
+----------------------------------------------------------------------------------------------------
+Test performance..
+Acc: 67.66, F-Score: 66.64
+              precision    recall  f1-score   support
+
+           0     0.7621    0.8495    0.8035      1256
+           1     0.6069    0.5658    0.5856       281
+           2     0.3043    0.1400    0.1918        50
+           3     0.5200    0.3750    0.4358       208
+           4     0.6863    0.6095    0.6456       402
+           5     0.4048    0.2500    0.3091        68
+           6     0.5133    0.5594    0.5354       345
+
+    accuracy                         0.6766      2610
+   macro avg     0.5425    0.4785    0.5010      2610
+weighted avg     0.6635    0.6766    0.6664      2610
+
+[[1067   31    5   33   60    5   55]
+ [  48  159    1    4   23    3   43]
+ [  20    4    7    9    2    1    7]
+ [  70   12    3   78    9    4   32]
+ [  97   23    1    6  245    2   28]
+ [  23    3    2    4    1   17   18]
+ [  75   30    4   16   17   10  193]]
+              precision    recall  f1-score   support
+
+           0     0.7808    0.8025    0.7915      1256
+           1     0.7487    0.5605    0.6411       521
+           2     0.6631    0.7395    0.6992       833
+
+    accuracy                         0.7341      2610
+   macro avg     0.7309    0.7008    0.7106      2610
+weighted avg     0.7368    0.7341    0.7320      2610
+
+[[1008   57  191]
+ [ 107  292  122]
+ [ 176   41  616]]

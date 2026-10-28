@@ -1,0 +1,22 @@
+[05:22:18] IEMOCAP / no_Res -> results/logs/IEMOCAP_no_Res.log
+[05:27:43] IEMOCAP / no_FCRes -> results/logs/IEMOCAP_no_FCRes.log
+[05:33:16] IEMOCAP / no_Seg -> results/logs/IEMOCAP_no_Seg.log
+[05:39:08] IEMOCAP / no_Le -> results/logs/IEMOCAP_no_Le.log
+[05:45:09] IEMOCAP / no_Le_Lo -> results/logs/IEMOCAP_no_Le_Lo.log
+[05:50:41] IEMOCAP4 / no_Res -> results/logs/IEMOCAP4_no_Res.log
+[05:54:18] IEMOCAP4 / no_FCRes -> results/logs/IEMOCAP4_no_FCRes.log
+[05:58:00] IEMOCAP4 / no_Seg -> results/logs/IEMOCAP4_no_Seg.log
+[06:01:17] IEMOCAP4 / no_Le -> results/logs/IEMOCAP4_no_Le.log
+[06:04:52] IEMOCAP4 / no_Le_Lo -> results/logs/IEMOCAP4_no_Le_Lo.log
+[06:08:14] MELD / no_Res -> results/logs/MELD_no_Res.log
+[06:20:12] MELD / no_FCRes -> results/logs/MELD_no_FCRes.log
+[06:31:55] MELD / no_Seg -> results/logs/MELD_no_Seg.log
+[06:42:57] MELD / no_Le -> results/logs/MELD_no_Le.log
+[06:54:50] MELD / no_Le_Lo -> results/logs/MELD_no_Le_Lo.log
+[07:06:16] CMUMOSEI7 / no_Res -> results/logs/CMUMOSEI7_no_Res.log
+[07:29:52] CMUMOSEI7 / no_FCRes -> results/logs/CMUMOSEI7_no_FCRes.log
+[07:53:14] CMUMOSEI7 / no_Seg -> results/logs/CMUMOSEI7_no_Seg.log
+[08:12:36] CMUMOSEI7 / no_Le -> results/logs/CMUMOSEI7_no_Le.log
+[08:33:19] CMUMOSEI7 / no_Le_Lo -> results/logs/CMUMOSEI7_no_Le_Lo.log
+Done. Failed runs: 0
+Wrote results/comparison.md
