@@ -8,7 +8,14 @@ from utils import AutomaticWeightedLoss
 seed = 2024
 
 
-def seed_everything(seed=seed):
+def set_seed(new_seed):
+    # --seed in run.py; the default stays 2024, so unchanged runs are unchanged.
+    global seed
+    seed = new_seed
+
+
+def seed_everything(seed=None):
+    seed = globals()['seed'] if seed is None else seed
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)

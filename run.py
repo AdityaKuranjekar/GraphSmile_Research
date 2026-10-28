@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import numpy as np
@@ -13,8 +14,8 @@ from torch.utils.data.distributed import DistributedSampler
 import time
 from utils import AutomaticWeightedLoss
 from model import GraphSmile
-from sklearn.metrics import confusion_matrix, classification_report
-from trainer import train_or_eval_model, seed_everything
+from sklearn.metrics import confusion_matrix, classification_report, f1_score
+from trainer import train_or_eval_model, seed_everything, set_seed
 from dataloader import (
     IEMOCAPDataset_BERT,
     IEMOCAPDataset_BERT4,
@@ -126,7 +127,16 @@ parser.add_argument(
     help='[loss_emotion, loss_sentiment, loss_shift]',
 )
 
+parser.add_argument('--seed', type=int, default=2024,
+                    help='random seed (default 2024, as in the original runs)')
+parser.add_argument('--select_on', default='test', choices=['test', 'valid'],
+                    help="epoch used for the reported numbers: 'test' = best test emotion F1 "
+                    "(original behaviour), 'valid' = best valid_f1_emo, test reported at that epoch")
+parser.add_argument('--out_json', default='',
+                    help='if set, write the selected-epoch result (valid and test, per class) to this file')
+
 args = parser.parse_args()
+set_seed(args.seed)
 
 if args.no_seg:
     args.shift_win = -1  # one window covering the whole dialogue; labels and model agree
@@ -347,6 +357,7 @@ def main(local_rank):
     best_extracted_feats = None
     all_f1_emo, all_acc_emo, all_loss = [], [], []
     all_f1_sen, all_acc_sen = [], []
+    sel = None  # result at the epoch chosen by --select_on valid
     all_f1_sft, all_acc_sft = [], []
 
     for epoch in range(n_epochs):
@@ -382,7 +393,7 @@ def main(local_rank):
             args.shift_win,
         )
 
-        valid_loss, _, _, valid_acc_emo, valid_f1_emo, _, _, valid_acc_sen, valid_f1_sen, valid_acc_sft, valid_f1_sft, _, _, _ = train_or_eval_model(
+        valid_loss, valid_label_emo, valid_pred_emo, valid_acc_emo, valid_f1_emo, _, _, valid_acc_sen, valid_f1_sen, valid_acc_sft, valid_f1_sft, _, _, _ = train_or_eval_model(
             model,
             loss_function_emo,
             loss_function_sen,
@@ -454,7 +465,29 @@ def main(local_rank):
                 ))
             print('-' * 100)
 
-            if args.classify == 'emotion':
+            if args.select_on == 'valid':
+                if sel is None or sel['valid_f1_emo'] < valid_f1_emo:
+                    sel = {
+                        'epoch': epoch + 1,
+                        'valid_f1_emo': valid_f1_emo,
+                        'valid_acc_emo': valid_acc_emo,
+                        'valid_per_class_f1': f1_score(
+                            valid_label_emo, valid_pred_emo, average=None,
+                            labels=list(range(n_classes_emo)), zero_division=0).tolist(),
+                        'test_acc_emo': test_acc_emo,
+                        'test_f1_emo': test_f1_emo,
+                        'test_per_class_f1': f1_score(
+                            test_label_emo, test_pred_emo, average=None,
+                            labels=list(range(n_classes_emo)), zero_division=0).tolist(),
+                        'test_confusion': confusion_matrix(
+                            test_label_emo, test_pred_emo,
+                            labels=list(range(n_classes_emo))).tolist(),
+                    }
+                    best_f1_emo = test_f1_emo
+                    best_f1_sen = test_f1_sen
+                    best_label_emo, best_pred_emo = test_label_emo, test_pred_emo
+                    best_label_sen, best_pred_sen = test_label_sen, test_pred_sen
+            elif args.classify == 'emotion':
                 if best_f1_emo == None or best_f1_emo < test_f1_emo:
                     best_f1_emo = test_f1_emo
                     best_f1_sen = test_f1_sen
@@ -505,7 +538,17 @@ def main(local_rank):
         writer.close()
     if local_rank == 0:
         print("Test performance..")
-        print("Acc: {}, F-Score: {}".format(max(all_acc_emo), max(all_f1_emo)))
+        if sel is not None:
+            print("Selected on valid_f1_emo, epoch {}: valid_f1_emo {}, "
+                  "Acc: {}, F-Score: {}".format(sel['epoch'], sel['valid_f1_emo'],
+                                                sel['test_acc_emo'], sel['test_f1_emo']))
+            sel['seed'] = args.seed
+            print('RESULT_JSON ' + json.dumps(sel))
+            if args.out_json:
+                with open(args.out_json, 'w') as f:
+                    json.dump(sel, f)
+        else:
+            print("Acc: {}, F-Score: {}".format(max(all_acc_emo), max(all_f1_emo)))
         os.makedirs('results', exist_ok=True)
         if not os.path.exists("results/record_{}_{}_{}.pk".format(
                 today.year, today.month, today.day)):
