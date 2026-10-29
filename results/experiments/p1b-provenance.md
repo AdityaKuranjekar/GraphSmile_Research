@@ -1,7 +1,9 @@
 # p1b: data provenance and label check (no training changes, no GPU)
 
-**Decision: kept as a finding. The IEMOCAP-6 feature file used by every run is byte-identical to the README release. No
-differences found for IEMOCAP-6. IEMOCAP-4, MELD and CMU-MOSEI files on the server were not inspected.**
+**Decision: kept as a finding. All four feature files on the server (`MELD.pkl`, `IEMOCAP.pkl`, `IEMOCAP4.pkl`,
+`CMUMOSEI7.pkl`) are byte-identical to the README release (md5 equal, see the final section). IEMOCAP-6 matches Table II and shows no
+difference. CMU-MOSEI does not match paper Table II counts, and MELD is one train+val dialogue short; these come from the released
+files themselves, not from our setup.**
 
 ## Method
 - Source A (experiments): `/DATA/rashmi_2521cs34/data/IEMOCAP.pkl`, the path set in the server's `run.py` (`IEMOCAP_path`, line 156,
@@ -209,3 +211,26 @@ Highly Negative has only 22 test utterances, which fits the paper's 0.00 F1 on t
 Run on the server, then paste the output:
 `grep -n "_path = " run.py` for the four dataset paths, then `md5sum` on each path. Equal md5 to the values above means the
 experiments used the README files; if not, the files differ and the table needs a row per file.
+
+---
+
+# Final: server files vs README release (md5sum run on the server, pasted by the user)
+| Server path (from `run.py` lines 160 to 163) | Server md5 | README file | README md5 | Same? |
+|---|---|---|---|---|
+| `/DATA/rashmi_2521cs34/data/MELD.pkl` | 87ec0e914aa34429587d9396bf3db42a | `meld_multi_features.pkl` | 87ec0e914aa34429587d9396bf3db42a | **yes** |
+| `/DATA/rashmi_2521cs34/data/IEMOCAP.pkl` | bfb8f1545d14ea2e1d9e1825380062b1 | `iemocap_multi_features.pkl` | bfb8f1545d14ea2e1d9e1825380062b1 | **yes** |
+| `/DATA/rashmi_2521cs34/data/IEMOCAP4.pkl` | 39498a707e4db62d09089e168fe7ea6e | `iemocap_multi_features_4.pkl` | 39498a707e4db62d09089e168fe7ea6e | **yes** |
+| `/DATA/rashmi_2521cs34/data/CMUMOSEI7.pkl` | b36414e92410407c86360d69c9af827f | `cmumosei_multi_regression_features.pkl` | b36414e92410407c86360d69c9af827f | **yes** |
+
+Equal md5 means the files are byte-for-byte the README release, so every structure, dimension, class-count and Table II
+result in the sections above applies to the files the experiments used.
+
+## What this settles and what it leaves open
+- Settled: for all four datasets our experiments ran on the released features. Feature provenance is not a source of the IEMOCAP-6
+  gap, and none of our runs used a corrupted or locally altered file.
+- Open, CMU-MOSEI: the released file has 2,595 / 693 dialogues and 19,050 / 4,184 utterances, against 2,549 / 646 and 18,198 / 4,662
+  in paper Table II. Our CMU-MOSEI numbers (WF1 43.96 against 44.93) were measured on this file, so they are not on the paper's exact
+  test set. Whether the authors used a different file for the paper cannot be checked from here.
+- Open, MELD: one train+val dialogue fewer than Table II (1,152 vs 1,153), all utterance counts equal; cause not investigated.
+- Not verified: whether the README release equals the files the authors used for their paper results.
+- Not done: Baidu mirror (not needed once the Drive files matched).
