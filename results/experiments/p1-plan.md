@@ -74,3 +74,60 @@ Proposed fix (NOT done, outside the approved scope): a `--clean_valid` flag, def
   1. p0c: baseline (no class weight). This replaces p0 as the baseline to beat.
   2. p1c: same plus `--class_weight`. Decision rule as above, but with the p0c mean and std.
   p0's numbers (valid overlapped train) stay on record as the contaminated-selector baseline.
+
+## Results: clean split (`--clean_valid --select_on valid`), 5 seeds, IEMOCAP-6, L2 1e-3
+Real-data split check from the logs: 108 train dialogues, 12 valid dialogues, 0 valid dialogues also in train.
+Commands: `run_clean.sh` as given (p0c = no `--class_weight`, p1c = `--class_weight`), GPU 1, seeds 2024 1 2 3 4.
+Files: `results/experiments/p{0,1}c_seed*.json`, `results/logs/p{0,1}c_IEMOCAP_seed*.log`.
+p1c class weights (train counts 459, 746, 1161, 854, 576, 1350): 1.869, 1.150, 0.739, 1.004, 1.489, 0.635
+(Happy, Sad, Neutral, Angry, Excited, Frustrated).
+
+Per seed, selected epoch / valid WF1 / test WF1 / Happy F1:
+
+| Seed | p0c epoch | valid | test WF1 | Happy | p1c epoch | valid | test WF1 | Happy |
+|---|---|---|---|---|---|---|---|---|
+| 2024 | 17 | 73.39 | 67.96 | 46.3 | 37 | 74.29 | 68.53 | 44.6 |
+| 1 | 16 | 73.01 | 68.19 | 47.4 | 36 | 73.92 | 68.71 | 44.9 |
+| 2 | 89 | 73.72 | 66.98 | 49.6 | 16 | 73.48 | 67.89 | 50.0 |
+| 3 | 59 | 74.10 | 68.64 | 38.6 | 31 | 74.65 | 67.61 | 38.0 |
+| 4 | 71 | 73.98 | 69.54 | 46.3 | 87 | 73.83 | 69.14 | 46.4 |
+
+Mean ± std (ddof=1), test, %:
+
+| | p0c (baseline) | p1c (class weight) | Paper |
+|---|---|---|---|
+| Valid WF1 | 73.64 ± 0.45 | 74.03 ± 0.45 | |
+| ACC | 68.65 ± 1.21 | 68.87 ± 0.63 | 72.77 |
+| **WF1** | **68.26 ± 0.94** | **68.38 ± 0.62** | 72.81 |
+| Happy | 45.62 ± 4.17 | 44.80 ± 4.34 | 63.09 |
+| Sad | 79.89 ± 1.58 | 81.05 ± 1.24 | 83.16 |
+| Neutral | 67.98 ± 2.22 | 68.60 ± 0.99 | 71.07 |
+| Angry | 68.87 ± 1.56 | 68.20 ± 0.98 | 71.38 |
+| Excited | 76.10 ± 1.24 | 76.36 ± 1.11 | 79.66 |
+| Frustrated | 63.21 ± 2.47 | 62.73 ± 1.88 | 66.84 |
+
+Happy->Excited (of 144) per seed: p0c 51, 46, 51, 83, 77 (mean 61.6); p1c 66, 65, 54, 83, 65 (mean 66.6).
+Excited->Happy (of 299): p0c 34, 38, 24, 16, 15 (mean 25.4); p1c 24, 20, 51, 14, 19 (mean 25.6).
+
+### Decision rule (fixed before the run, with p0c as baseline)
+- Kept needs mean WF1 >= 68.26 + 0.94 = 69.20, or Happy gain > 4.17 with WF1 not lower. Observed WF1 +0.11 (paired
+  per seed: +0.57, +0.52, +0.91, -1.03, -0.40); Happy -0.81 (paired: -1.6, -2.4, +0.4, -0.5, +0.1). Not met.
+- Rejected needs a WF1 drop of more than 0.94 with no Happy gain. Observed +0.11. Not met.
+- **Decision: inconclusive, with no evidence of a benefit.** The change is indistinguishable from zero on WF1 and Happy,
+  Happy->Excited confusion did not fall (61.6 -> 66.6 on average), and the per-seed signs are mixed. The flag stays in
+  the code, off by default. Inverse-frequency weighting is not a cure for the Happy/Excited confusion on this model.
+
+### What the clean baseline shows (descriptive; test was not used to choose anything)
+- **The honest baseline is much lower than before.** WF1 68.26 ± 0.94, Happy 45.62 ± 4.17, versus 70.82 ± 0.47 and
+  58.69 with the overlapping "validation" in p0. The gap to the paper is now 4.5 WF1 and 17.5 Happy.
+- **The loss is epoch selection, not training.** Best-test-epoch ("oracle", diagnostic only) is 71.22 for p0c and 71.01
+  for p1c, close to p0's 71.61, and both runs train on 108 dialogues. The selected epoch gives 68.26. The final epoch
+  alone gives 68.04 (p0c mean), so valid-based selection barely beats just taking epoch 120. In p0c, seeds 2024
+  and 1 selected epochs 17 and 16, long before training converged.
+- **The 12-dialogue validation set is too small to pick epochs.** Valid WF1 is 73.6 and flat across epochs and seeds
+  (std 0.45), while test varies by about 3 points between epochs.
+- **Implication:** the next lever is not another loss. The reported numbers depend mostly on how the epoch is
+  chosen. Options for the next pass (all need your approval and need no test selection): average predictions or weights
+  over the last K epochs, a larger validation share via k-fold on the train dialogues (select by pooled valid F1 over folds), or
+  choosing the epoch by smoothed valid F1 over a window. Which one reproduces a protocol the paper could plausibly have
+  used is unverified: the paper's selection protocol is not stated in anything I have checked.
