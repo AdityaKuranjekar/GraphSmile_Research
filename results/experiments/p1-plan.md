@@ -59,3 +59,18 @@ Consequences:
 - Not yet verified on the real IEMOCAP pickle (n_train dialogues there); needs a one-line check on the GPU machine.
 Proposed fix (NOT done, outside the approved scope): a `--clean_valid` flag, default off, that trains on
 `idx[split:]` and validates on `idx[:split]`. Then rerun the baseline and pass 1 under it.
+
+## Update: `--clean_valid` added (default off); plan reordered
+- Change: with `--clean_valid`, train draws `idx[split:]` and valid draws `idx[:split]` (a small `DistributedSampler`
+  subclass maps sampler positions back to dataset indices). `--class_weight` counts come from the dialogues the train
+  loader actually draws, so it stays correct in both modes. Every run now logs one `split:` line with the number of
+  valid dialogues that are also in train.
+- CPU smoke test (synthetic, not a result): default output identical to the previous commit; default reports
+  3 of 3 valid dialogues also in train; `--clean_valid` reports 0 of 3; class-weight counts under `--clean_valid`
+  equal an independent numpy count over the train dialogues `idx[3:]`.
+- Side observation (not changed): `setup_samplers` builds fresh samplers each epoch and calls `set_epoch` on them, but the
+  `DataLoader`s keep their original samplers, so the shuffle order never changes between epochs. Same in both modes.
+- New run order, all with `--clean_valid --select_on valid`, same 5 seeds, paper config, L2 1e-3:
+  1. p0c: baseline (no class weight). This replaces p0 as the baseline to beat.
+  2. p1c: same plus `--class_weight`. Decision rule as above, but with the p0c mean and std.
+  p0's numbers (valid overlapped train) stay on record as the contaminated-selector baseline.

@@ -132,6 +132,9 @@ parser.add_argument('--seed', type=int, default=2024,
 parser.add_argument('--select_on', default='test', choices=['test', 'valid'],
                     help="epoch used for the reported numbers: 'test' = best test emotion F1 "
                     "(original behaviour), 'valid' = best valid_f1_emo, test reported at that epoch")
+parser.add_argument('--clean_valid', action='store_true', default=False,
+                    help='train on dialogues idx[split:] and validate on idx[:split]; by default the '
+                    'repo trains on idx[:n-split], which contains the validation dialogues')
 parser.add_argument('--class_weight', action='store_true', default=False,
                     help='weight the emotion NLL loss by inverse class frequency of the train dialogues')
 parser.add_argument('--out_json', default='',
@@ -194,11 +197,24 @@ def get_ddp_generator(seed=3407):
     return g
 
 
+class _IndexSampler(DistributedSampler):
+    # DistributedSampler yields positions in the list it was given; map them back to dataset indices.
+
+    def __init__(self, idx):
+        super().__init__(idx)
+        self.idx = idx
+
+    def __iter__(self):
+        return iter([self.idx[i] for i in super().__iter__()])
+
+
 def get_train_valid_sampler(trainset, valid_ratio):
     size = len(trainset)
     idx = list(range(size))
     split = int(valid_ratio * size)
 
+    if args.clean_valid:
+        return _IndexSampler(idx[split:]), _IndexSampler(idx[:split])
     return DistributedSampler(idx[split:]), DistributedSampler(idx[:split])
 
 
@@ -224,6 +240,9 @@ def get_data_loaders(path, dataset_class, batch_size, valid_ratio, num_workers,
         num_workers=num_workers,
         pin_memory=pin_memory,
     )
+    tr_idx, va_idx = set(train_sampler), set(valid_sampler)
+    print('split: {} train dialogues, {} valid dialogues, {} valid dialogues also in train '
+          '(clean_valid={})'.format(len(tr_idx), len(va_idx), len(tr_idx & va_idx), args.clean_valid))
     testset = dataset_class(path, train=False)
     test_loader = DataLoader(
         testset,
@@ -354,12 +373,11 @@ def main(local_rank):
         print('There is no such dataset')
 
     if args.class_weight:
-        # Same rows the train loader draws: the first n - int(0.1 * n) dialogues
-        # (see get_train_valid_sampler, which hands indices to DataLoader as-is).
+        # Same dialogues the train loader draws (see get_train_valid_sampler).
         ds = train_loader.dataset
-        n_train = len(ds) - int(0.1 * len(ds))
+        train_idx = sorted(set(train_loader.sampler))
         counts = np.bincount(
-            np.concatenate([np.asarray(ds.labels_emotion[k]) for k in ds.keys[:n_train]]),
+            np.concatenate([np.asarray(ds.labels_emotion[ds.keys[i]]) for i in train_idx]),
             minlength=n_classes_emo).astype(np.float64)
         weights = counts.sum() / (n_classes_emo * counts)  # N / (K * n_c)
         print('class_weight: counts {}, weights {}'.format(
