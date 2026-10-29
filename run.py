@@ -132,6 +132,8 @@ parser.add_argument('--seed', type=int, default=2024,
 parser.add_argument('--select_on', default='test', choices=['test', 'valid'],
                     help="epoch used for the reported numbers: 'test' = best test emotion F1 "
                     "(original behaviour), 'valid' = best valid_f1_emo, test reported at that epoch")
+parser.add_argument('--class_weight', action='store_true', default=False,
+                    help='weight the emotion NLL loss by inverse class frequency of the train dialogues')
 parser.add_argument('--out_json', default='',
                     help='if set, write the selected-epoch result (valid and test, per class) to this file')
 
@@ -350,6 +352,20 @@ def main(local_rank):
         )
     else:
         print('There is no such dataset')
+
+    if args.class_weight:
+        # Same rows the train loader draws: the first n - int(0.1 * n) dialogues
+        # (see get_train_valid_sampler, which hands indices to DataLoader as-is).
+        ds = train_loader.dataset
+        n_train = len(ds) - int(0.1 * len(ds))
+        counts = np.bincount(
+            np.concatenate([np.asarray(ds.labels_emotion[k]) for k in ds.keys[:n_train]]),
+            minlength=n_classes_emo).astype(np.float64)
+        weights = counts.sum() / (n_classes_emo * counts)  # N / (K * n_c)
+        print('class_weight: counts {}, weights {}'.format(
+            counts.astype(int).tolist(), np.round(weights, 3).tolist()))
+        loss_function_emo = nn.NLLLoss(
+            weight=torch.tensor(weights, dtype=torch.float32, device=device))
 
     best_f1_emo, best_f1_sen, best_loss = None, None, None
     best_label_emo, best_pred_emo = None, None

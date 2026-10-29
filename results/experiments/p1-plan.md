@@ -38,3 +38,24 @@ some seeds, so epoch selection matters and a single epoch is noisy.
 - EACL-style anchor/angle loss: needs the full paper and the authors' repo read first (appendix claims unverified).
 - Focal loss, sqrt-inverse weights, label smoothing: possible later passes if pass 1 shows weighting matters.
 - Looking for the remaining ~2-point gap in other classes (all classes are 0.8 to 4.4 below the paper).
+
+## Status: approved and implemented (flag `--class_weight`, default off)
+CPU smoke test (synthetic pickle, 3 epochs, seed 1; not a result):
+- Flag off: output identical to the previous commit's `run.py` (only wall-clock time differs).
+- Flag on: weights equal N / (K * n_c) from the train dialogues; they match an independent numpy computation.
+- Decision: pending GPU results.
+
+## IMPORTANT finding (found while implementing; affects p0 and p1)
+`get_train_valid_sampler` builds `DistributedSampler(idx[split:])` and `DistributedSampler(idx[:split])`.
+A DistributedSampler yields positions `0..len-1` of the list it is given, and `DataLoader` uses those as indices
+into the full train set. So train draws dialogues `0..n-split-1` and valid draws `0..split-1`: **the validation
+dialogues are a subset of the training dialogues.** Confirmed on the synthetic set (n=30: valid indices are contained in
+train indices). This is existing paper-repo behaviour, not something we introduced.
+Consequences:
+- `valid_f1_emo` is a training-set metric, not held-out. That explains valid WF1 ~88 vs test ~71.
+- `--select_on valid` therefore does not select on held-out data. It avoids selecting on test, but it is a weak
+  and biased selector (it prefers fit to train). The p0 baseline (70.82 +/- 0.47) is still a valid
+  "never looked at test" number, but its epoch choice is not a proper validation choice.
+- Not yet verified on the real IEMOCAP pickle (n_train dialogues there); needs a one-line check on the GPU machine.
+Proposed fix (NOT done, outside the approved scope): a `--clean_valid` flag, default off, that trains on
+`idx[split:]` and validates on `idx[:split]`. Then rerun the baseline and pass 1 under it.
