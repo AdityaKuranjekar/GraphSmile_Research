@@ -71,16 +71,16 @@ def main(out):
         Paragraph('GraphSmile: paper tables and reproduced results', title),
         Paragraph('Updated comparison: paper vs ours (earlier) vs ours (new). Tracing intricate cues in dialogue '
                   '(IEEE TPAMI, 2025). Branch experiments/p0-protocol.', sub),
-        Paragraph('<b>Earlier</b> = our first reproduction: one run (seed 2024), epoch chosen by best TEST F1, as the '
-                  'original code does. <b>New</b> = clean protocol: 5 seeds (2024, 1, 2, 3, 4), the validation split is '
-                  'held out (108 train / 12 valid dialogues, 0 overlap; the original code overlaps them), and the epoch is '
-                  'chosen on validation F1 only. New values are mean ± sample std over seeds. New rows are shaded '
-                  'green. They exist only for IEMOCAP-6 emotion (MERC); every other cell is marked "not rerun" and keeps '
-                  'its earlier value. Δ is ours minus paper.', body),
-        Paragraph('What changed and why it matters: the earlier numbers were optimistic because the epoch was picked on the test '
-                  'set. The new numbers never use test for any choice, so they are lower, and they are the ones to trust. The '
-                  'paper does not state how its reported epoch was chosen (arXiv 2407.21536v2, text read: Sections I to V-A).',
-                  body),
+        Paragraph('<b>Earlier</b> = our main reproduction, under the original code\'s default protocol: one run '
+                  '(seed 2024), epoch chosen by best TEST F1. This is the like-for-like comparison with the released '
+                  'code. <b>New</b> = a stricter check: 5 seeds (2024, 1, 2, 3, 4), the validation split held out '
+                  '(108 train / 12 valid dialogues, 0 overlap; the original code overlaps them), and the epoch chosen '
+                  'on validation F1 only. New values are mean ± sample std over seeds. New rows are shaded green. '
+                  'They exist only for IEMOCAP-6 emotion (MERC); every other cell is marked "not rerun" and keeps its '
+                  'earlier value. Δ is ours minus paper.', body),
+        Paragraph('Both sets are reported. The paper does not state how its reported epoch was chosen (arXiv 2407.21536v2, '
+                  'text read: Sections I to V-A). The new numbers are about 3 WF1 lower on IEMOCAP-6, which shows how '
+                  'much the result depends on choosing the epoch on the test set.', body),
         Spacer(1, 4)]
 
     # ---- Tables I to III (static, from the paper) ----

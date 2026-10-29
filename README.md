@@ -72,4 +72,6 @@ We re-ran GraphSmile on IEMOCAP-6, IEMOCAP-4, MELD and CMU-MOSEI. The full compa
 | MELD | 67.70 / 66.71 | 67.59 / 66.55 |
 | CMU-MOSEI | 46.82 / 44.93 | 45.10 / 43.96 |
 
+The numbers above use the original code's default protocol (best test epoch, seed 2024). Under a stricter protocol (held-out validation split, epoch chosen on validation, 5 seeds), IEMOCAP-6 WF1 is 68.26 ± 0.94. See [REPRODUCTION.md](REPRODUCTION.md).
+
 Each number comes from a log in `results/logs/`, indexed in `results/proof_index.md`. Steps for reproducing the runs are in [RUNBOOK.md](RUNBOOK.md).

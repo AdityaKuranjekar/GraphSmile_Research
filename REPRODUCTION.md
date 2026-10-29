@@ -45,6 +45,24 @@ selection may differ from theirs.
 
 Paper per-class values are F1 scores in %. Ours are the same.
 
+### Clean-protocol check (disclosure)
+
+The tables below use the original code's default protocol (section 3), so they are the like-for-like
+comparison with the released code. We also ran a stricter check for IEMOCAP-6 only, and report it here so
+the dependence on epoch selection is visible.
+
+- **Validation overlap in the original code.** `get_train_valid_sampler` builds `DistributedSampler`s from sliced
+  lists, which yield list positions, not the dialogue indices. The "validation" dialogues are therefore also in the
+  training set, and the original validation F1 is a training metric. `--clean_valid` fixes this (108 train, 12
+  validation dialogues, 0 overlap). All new flags default off, so default runs are unchanged.
+- **Results on IEMOCAP-6 (WF1, 5 seeds, mean ± std).** Clean split, epoch chosen on validation: 68.26 ± 0.94.
+  Original overlapping split, epoch chosen on validation: 70.82 ± 0.47. Single run, seed 2024, best test epoch
+  (main tables): 71.17. Final epoch 68.04, last-10-epoch mean 68.57, best-test-epoch oracle 71.22.
+- **Class-weighted loss** (`--class_weight`, default off): 68.38 ± 0.62 WF1, Happy 44.80 ± 4.34. No measurable gain.
+- **Reading.** The training run reaches about 71 WF1 at its best test epoch, but the epoch picked without test
+  gives about 68, so most of the gap to 71 is epoch selection. The paper does not state how it chose its epoch.
+- Details: `results/experiments/`, `docs/comparison_clean_protocol.pdf`, `docs/paper_vs_reproduced_updated.pdf`.
+
 ## 4. Results
 
 ### Table IV: MERC, GraphSmile (paper vs ours, %)
