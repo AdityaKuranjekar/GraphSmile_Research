@@ -143,3 +143,69 @@ three paths and compare with the README files; the MELD and CMU-MOSEI downloads 
 | Per-speaker counts | no source to compare against (paper gives none); reported above |
 | Label order and sentiment mapping | consistent with Table I and Table IV; no names in the pickle |
 | IEMOCAP-4 / MELD / CMU-MOSEI server files | not compared (see E) |
+
+---
+
+# Addendum 2: MELD and CMU-MOSEI README files (approved download, restricted reader)
+Files downloaded from the README Drive folder into a new scratch dir (not in the repo): `meld_multi_features.pkl`
+(282,181,201 bytes, md5 87ec0e914aa34429587d9396bf3db42a) and `cmumosei_multi_regression_features.pkl` (177,842,139 bytes,
+md5 b36414e92410407c86360d69c9af827f); sizes equal the Drive listing (269.1 and 169.6 MiB). Read with the restricted reader.
+The first pass blocked CMU-MOSEI on `builtins.list`; the allow-list was widened to the plain container builtins
+(list, dict, tuple, set, frozenset, slice, range, complex, bytearray) and nothing else. No code-executing global was requested by either file.
+Labels and sentiment counts below come from the project's own `MELDDataset_BERT` and `CMUMOSEIDataset7`, run with the restricted reader.
+
+**The server copies of these two files (and IEMOCAP-4) have not been hashed yet, so there is no README-vs-experiments comparison for them.**
+The comparison in this section is README file vs paper Table II.
+
+## F. Structure
+| Property | MELD | CMU-MOSEI |
+|---|---|---|
+| Top-level | list of 14: IDs, Speakers, Labels, Sentiments, Text0 to Text3, Audio, Visual, Sentence, trainVid (set), testVid (set), None | list of 9: IDs, Speakers, Labels, Text, Audio, Visual, Sentence, trainVid (array), testVid (array) |
+| Dialogue entries | 1,432 | 3,288 (Labels dict has 3,290 keys) |
+| Dims | text 1024 (x4), audio 300, visual 342, speaker one-hot 9 | text 1024, audio 384, visual 35 |
+| `run.py` expects | [1024, 342, 300] | [1024, 35, 384] |
+| Matches `run.py`? | yes | yes |
+| Train/test overlap, length mismatches | 0, 0 | 0, 0 |
+
+## G. Paper Table II vs files
+| Dataset | Quantity | Paper | File | Same? |
+|---|---|---|---|---|
+| MELD | Dialogues train+val / test | 1,153 / 280 | 1,152 / 280 | **train+val differs by 1** |
+| MELD | Utterances train+val / test | 11,098 / 2,610 | 11,098 / 2,610 | yes |
+| CMU-MOSEI | Dialogues train+val / test | 2,549 / 646 | 2,595 / 693 | **no (+46 / +47)** |
+| CMU-MOSEI | Utterances train+val / test | 18,198 / 4,662 | 19,050 / 4,184 | **no (+852 / -478)** |
+
+MELD: all utterances match, one dialogue fewer than the paper; cause unknown (not investigated). CMU-MOSEI: the README file
+disagrees with Table II in every count. Total utterances are 23,234 in the file against 22,860 in the paper, and the train/test
+balance differs. The Drive listing dates this file 18 Jun 2025, later than the MELD and IEMOCAP-6 files (19 Jan 2025), so it may be
+a different or updated version than the one used for the paper; not verified.
+
+## H. Class counts as the code sees them
+MELD (index map from `dataloader.py`: 0 neutral, 1 surprise, 2 fear, 3 sadness, 4 joy, 5 disgust, 6 anger = paper Table IV column order):
+| | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|---|
+| Train+val | 5,180 | 1,355 | 308 | 794 | 1,906 | 293 | 1,262 |
+| Test | 1,256 | 281 | 50 | 208 | 402 | 68 | 345 |
+MELD sentiment (0 neutral, 1 positive, 2 negative per `compare_to_paper.py`): train+val 5,180 / 2,567 / 3,351; test 1,256 / 521 / 833.
+Sentiment class 0 equals emotion class 0 (neutral) in count, as expected.
+
+CMU-MOSEI 7 classes (thresholds in `CMUMOSEIDataset7`, HNeg to HPos):
+| | HNeg | Neg | WNeg | Neu | WPos | Pos | HPos |
+|---|---|---|---|---|---|---|---|
+| Train+val | 799 | 2,093 | 3,007 | 4,173 | 5,896 | 2,530 | 552 |
+| Test | 22 | 159 | 602 | 921 | 1,666 | 692 | 122 |
+CMU-MOSEI sentiment (0 negative, 1 neutral, 2 positive): train+val 5,899 / 4,173 / 8,978; test 783 / 921 / 2,480.
+Highly Negative has only 22 test utterances, which fits the paper's 0.00 F1 on that class.
+
+## Differences found, all datasets checked so far
+| Item | Result |
+|---|---|
+| IEMOCAP-6 | server file = README file (md5 equal); matches Table II |
+| IEMOCAP-4 | README file matches Table II and `run.py` dims; server copy not hashed |
+| MELD | README file matches `run.py` dims and Table IV label order; Table II dialogues differ by 1 (1,152 vs 1,153); server copy not hashed |
+| CMU-MOSEI | README file matches `run.py` dims but **not Table II counts** (dialogues and utterances both differ); server copy not hashed |
+
+## To finish
+Run on the server, then paste the output:
+`grep -n "_path = " run.py` for the four dataset paths, then `md5sum` on each path. Equal md5 to the values above means the
+experiments used the README files; if not, the files differ and the table needs a row per file.
