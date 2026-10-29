@@ -75,3 +75,71 @@ test 144, 245, 384, 170. Excited is excluded here (Happy has 504 = the 6-class H
   released ones. Remaining untested: whether the released file equals the one the authors used for the paper (cannot be checked from here).
 - No code was changed and no GPU job was run. The other three server pickles should be hashed the same way if you want the
   full table closed.
+
+---
+
+# Addendum: speaker, session and sentiment checks (pass 1b as re-issued)
+Computed on the README file with the restricted reader. The server `IEMOCAP.pkl` is byte-identical (same md5), so every number
+below holds for the file the experiments used. The sentiment check ran the project's own `IEMOCAPDataset_BERT` with its
+`pickle.load` redirected to the restricted reader.
+
+## A. Table II check (paper vs file), IEMOCAP-6
+| Quantity | Paper Table II | File | Same? |
+|---|---|---|---|
+| Dialogues train+val / test | 120 / 31 | 120 / 31 | yes |
+| Utterances train+val / test | 5,810 / 1,623 | 5,810 / 1,623 | yes |
+IEMOCAP-4 (README file): 120 / 31 and 3,600 / 943 also match Table II. MELD and CMU-MOSEI: not downloaded, not checked.
+
+## B. Utterances per class and per speaker role (F = female, M = male speaker role), IEMOCAP-6
+Train+val (M 3,067, F 2,743):
+| Class (index) | Happy (0) | Sad (1) | Neutral (2) | Angry (3) | Excited (4) | Frustrated (5) | Total |
+|---|---|---|---|---|---|---|---|
+| F | 275 | 425 | 512 | 511 | 361 | 659 | 2,743 |
+| M | 229 | 414 | 812 | 422 | 381 | 809 | 3,067 |
+| All | 504 | 839 | 1,324 | 933 | 742 | 1,468 | 5,810 |
+
+Test (F 751, M 872):
+| Class (index) | Happy (0) | Sad (1) | Neutral (2) | Angry (3) | Excited (4) | Frustrated (5) | Total |
+|---|---|---|---|---|---|---|---|
+| F | 77 | 132 | 221 | 78 | 82 | 161 | 751 |
+| M | 67 | 113 | 163 | 92 | 217 | 220 | 872 |
+| All | 144 | 245 | 384 | 170 | 299 | 381 | 1,623 |
+
+Note: in test, Excited is 217 male vs 82 female utterances (73% male), while train+val Excited is 381 male vs 361 female
+(51% male). Not tested whether this shift matters for the Happy/Excited confusion.
+
+## C. Sessions and actors
+- Test dialogues are all from Session 5 (31 of 31); train+val dialogues are Sessions 1 to 4 (28, 30, 32, 30). So the test set is
+  speaker-independent from train, while any random split of train+val is not.
+- Utterance IDs encode session and speaker letter; the letter equals the speaker role for all 5,810 + 1,623 utterances. Utterances
+  per session and role, train+val: Ses01 F 641 / M 732, Ses02 F 654 / M 702, Ses03 F 732 / M 837, Ses04 F 716 / M 796; test: Ses05 F 751 / M 872.
+- Our validation split (first 12 dialogues of `trainVid`, used by `--clean_valid`): 664 utterances from Sessions 1 to 4
+  (Ses01 2, Ses02 6, Ses03 2, Ses04 2 dialogues), with class counts 45, 93, 163, 79, 166, 118 (Happy only 45). It shares actors
+  with the training dialogues, so it is a speaker-dependent split, and Happy F1 on it rests on 45 utterances.
+
+## D. Sentiment labels (from the project's own dataloader)
+Emotion to sentiment, counted from `labels_sentiment` (0 = negative, 1 = neutral, 2 = positive):
+| Emotion (index) | Train+val sentiment | Test sentiment |
+|---|---|---|
+| Happy (0) | positive: 504 of 504 | positive: 144 of 144 |
+| Sad (1) | negative: 839 of 839 | negative: 245 of 245 |
+| Neutral (2) | neutral: 1,324 of 1,324 | neutral: 384 of 384 |
+| Angry (3) | negative: 933 of 933 | negative: 170 of 170 |
+| Excited (4) | positive: 742 of 742 | positive: 299 of 299 |
+| Frustrated (5) | negative: 1,468 of 1,468 | negative: 381 of 381 |
+Happy and Excited both map to Positive, and Sad, Angry, Frustrated to Negative, as in paper Table I. This confirms the label to
+name assignment only through the code's own mapping (see section 4 above); the pickle itself has no names.
+
+## E. Feature files not yet checked (what to download and compare)
+The server has other pickles (MELD, CMU-MOSEI, IEMOCAP-4 paths in `run.py`) that were not hashed. From the README Drive folder:
+`iemocap_multi_features_4.pkl` (downloaded, md5 39498a70...), `meld_multi_features.pkl` (269.1 MB, not downloaded),
+`cmumosei_multi_regression_features.pkl` (169.6 MB, not downloaded). To close the table, run `md5sum` on the server copies of those
+three paths and compare with the README files; the MELD and CMU-MOSEI downloads need your approval.
+
+## Differences found (updated)
+| Item | Result |
+|---|---|
+| IEMOCAP-6 file, structure, dims, per-class counts, Table II counts | identical to the README release and to the paper |
+| Per-speaker counts | no source to compare against (paper gives none); reported above |
+| Label order and sentiment mapping | consistent with Table I and Table IV; no names in the pickle |
+| IEMOCAP-4 / MELD / CMU-MOSEI server files | not compared (see E) |
