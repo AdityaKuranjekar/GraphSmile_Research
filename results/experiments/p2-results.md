@@ -99,7 +99,7 @@ SETTINGS="shift_5 shift_10" PROTOCOLS="clean" SEEDS="3 4" GPU=0 bash scripts/run
 
 That is 19 runs (15 paper, 4 clean). Results come back as `results/experiments/p2_<setting>_<protocol>_seed<seed>.json`.
 
-Decision for stage 2 (to be filled in when results return): keep a setting only if its 5-seed clean WF1 mean beats the clean baseline by more than the baseline std, and its paper-comparable WF1 is not worse than the paper-protocol base.
+Decision rule for stage 2: keep a setting only if its 5-seed clean WF1 mean beats the clean baseline by more than the baseline std, and its paper-comparable WF1 is not worse than the paper-protocol base. The outcome is in the stage 2 results section below: neither setting is kept.
 
 ## Stage 2 results (5 seeds: 2024, 1, 2, 3, 4)
 
