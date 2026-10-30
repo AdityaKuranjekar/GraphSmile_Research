@@ -68,3 +68,25 @@ Stage 2 must also report the paper-comparable number (`--select_on test`, defaul
 - The baseline std (0.64) comes from three seeds, so it is itself a noisy estimate. The one-std margin is a coarse threshold.
 - shift_5 gains through Happy (+3.0 over p0c, about 1.8 baseline Happy stds). Excited is flat (75.06 vs 75.21). shift_10 gains on both: Happy +1.8 and Excited +1.2.
 - Happy→Excited counts vary widely across seeds in several settings (win_10_10 and win_5_5 especially). These confusion counts are not used in the decision.
+
+## Stage 2 (promoted 2026-10-30)
+
+Promoted: **shift_10** and **shift_5**. win_5_5 is not promoted.
+
+Stage 2 needs, per the experiment rules:
+- Paper protocol (default flags, `--select_on test`) for base, shift_5 and shift_10, seeds 2024, 1, 2, 3, 4.
+- Clean protocol for shift_5 and shift_10, seeds 3 and 4. Clean base seeds 3 and 4 already exist as `p0c_seed3.json` and `p0c_seed4.json`.
+
+Run on the user's server (`/DATA/rashmi_2521cs34/GraphSmile_Research`, conda env `graphsmile`), with the branch `experiments/p1b-provenance` checked out so `scripts/run_pass2.sh` is present:
+
+```bash
+SETTINGS="base shift_5 shift_10" PROTOCOLS="paper" SEEDS="2024 1 2 3 4" GPU=0 bash scripts/run_pass2.sh
+```
+
+```bash
+SETTINGS="shift_5 shift_10" PROTOCOLS="clean" SEEDS="3 4" GPU=0 bash scripts/run_pass2.sh
+```
+
+That is 19 runs (15 paper, 4 clean). Results come back as `results/experiments/p2_<setting>_<protocol>_seed<seed>.json`.
+
+Decision for stage 2 (to be filled in when results return): keep a setting only if its 5-seed clean WF1 mean beats the clean baseline by more than the baseline std, and its paper-comparable WF1 is not worse than the paper-protocol base.
