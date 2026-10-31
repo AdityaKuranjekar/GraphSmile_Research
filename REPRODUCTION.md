@@ -209,7 +209,7 @@ are not like-for-like, even for the full model.
 **Notes**
 - **Structure ablations (No Res, No FC-Res, No Seg):** the MERC results are close to the paper. No FC-Res and No Seg are within about 0.5 points on all datasets. No Res is close on IEMOCAP-6 and CMU-MOSEI, but MELD is about 4 points below the paper's ACC.
 - **Sentiment-loss-off rows (No L_s, No L_s & L_o):** the MSAC columns are not comparable. Removing the sentiment loss leaves the sentiment head untrained. The paper's MSAC block uses No L_e and No L_e & L_o (emotion loss off, and emotion and shift loss off), which are different rows.
-- **No L_e and No L_e & L_o (MSAC):** on MELD and CMU-MOSEI these are reasonably close to the paper. On IEMOCAP-6 and IEMOCAP-4 they are far below it (for example 54.59 ACC against 84.41 for No L_e on IEMOCAP-6, and 44.01 against 85.58 for No L_e & L_o on IEMOCAP-4). These four runs are not verified: the training curves have not been checked, and they may not have converged. See section 5.
+- **No L_e and No L_e & L_o (MSAC):** on MELD and CMU-MOSEI these are reasonably close to the paper. On IEMOCAP-6 and IEMOCAP-4 some runs are far below it (54.59 ACC against 84.41 for No L_e on IEMOCAP-6; 44.01 against 85.58 for No L_e & L_o on IEMOCAP-4). A three-seed rerun (pass p3, `results/experiments/p3-collapse-check-summary.md`) shows this is a **selection artifact, not failed training**: with the emotion loss off, the emotion head is untrained, so "best test emotion F1" picks an arbitrary epoch. At that epoch the sentiment head sometimes predicts one class (ACC 44.01), while the same runs reach about 80 to 83 ACC at other seeds. IEMOCAP-6 No L_e: seeds 2024 / 1 / 2 give ACC 54.59 / 81.52 / 80.10. The code's `--classify sentiment` option selects the epoch by sentiment F1, which is the natural choice for these MSAC rows; these rows have **not** been rerun that way yet. See section 5.
 - **No Textual:** our result is higher than the paper on IEMOCAP-6 (59.33 against 55.70). We remove text by zeroing its input. The paper does not say how it removed text, so this difference may come from that choice.
 
 ### Table VII: time and memory (GraphSmile)
@@ -268,8 +268,20 @@ The stage 1 gains for shift_5 and shift_10 (+1.4 to +1.6 WF1 on 3 seeds) did not
 1. **IEMOCAP-6 is about 1.2 points below the paper.** Under the paper protocol (best test epoch), the five-seed mean is 71.61 ± 0.36 WF1 and 71.62 ± 0.31 ACC, against the paper's 72.81 and 72.77. All five seeds (WF1 71.17 to 71.93) are below the paper's value, so seed variation alone does not explain the gap. The seed-2024 run used in the main tables (71.17) is the lowest of the five. The gap is largest in Happy (-8.2 in that run); Happy F1 varies by several points between seeds. The paper does not report its own seed spread.
 2. **Feature files:** we used the feature pickles from the dataset release. The paper's exact files may differ, which is untested.
 3. **Test-set selection:** the code picks the best epoch by test F1, as described in section 3.
-4. **Unverified MSAC runs:** No L_e (IEMOCAP-6, IEMOCAP-4) and No L_e & L_o (IEMOCAP-4) are far below the paper. Their training logs need checking, and a rerun with another seed would show whether the result is stable.
+4. **MSAC rows with the emotion loss off (No L_e, No L_e & L_o):** these were selected by emotion F1 although the emotion head is untrained, which produced the collapsed values (see the note under Table VI). A rerun with `--classify sentiment` (8 runs, about 1.5 hours) would give the comparable numbers; it has not been done.
 5. **Not reproduced:** the ‡ (optimized MSAC) rows, the baseline rows of Table IV, and Figs. 4 to 7.
+
+## 5b. Experiment record
+
+Each pass has a summary under `results/experiments/`. No tuned setting was adopted; the main tables stay at the Table III settings.
+
+| Pass | Question | Result |
+|---|---|---|
+| p0 | Seed variance and a clean validation split | The original code's validation dialogues overlap its training set (fixed behind `--clean_valid`). Clean 5-seed IEMOCAP-6 WF1 is 68.26 ± 0.94. |
+| p1 | Class-weighted emotion loss (`--class_weight`) | 68.38 ± 0.62 against 68.26. No measurable gain, not kept. |
+| p1b | Are our feature files the released ones? | All four server files are byte-identical to the README release (md5). IEMOCAP-6 matches Table II; MELD is one dialogue short and CMU-MOSEI counts differ from Table II in the released file itself. |
+| p2 | Sensitivity of window, shift window, layers, loss weights | Screened on 3 seeds; `shift_5` and `shift_10` looked better, but on 5 seeds the gains were +0.26 and +0.09 (not kept). Paper-protocol 5-seed WF1: base 71.61, shift_5 71.48, shift_10 71.49. |
+| p3 | Why do some MSAC ablation rows collapse? | Selection artifact (see Table VI notes), not failed training. |
 
 ## 6. Proof and reproducibility
 

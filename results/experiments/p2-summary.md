@@ -127,3 +127,10 @@ SETTINGS="win_5_5" PROTOCOLS="paper" SEEDS="2024 1 2" GPU=0 bash scripts/run_pas
 ```
 
 - Nothing else is needed for the current decisions, because shift_5 and shift_10 are already rejected on the rule and the rest fail the clean criterion.
+
+
+## Addendum (integration)
+
+The paper-protocol numbers flagged above as unverified were recomputed from the 15 logs in `results/logs/p2_*_paper_seed*.log`
+on branch `integrate/final`. The standard deviations are now measured (n = 5, sample std): base WF1 71.61 ± 0.36, shift_5 71.48 ± 0.21,
+shift_10 71.49 ± 0.32. They match the values in `p2-results.md`. The decisions in this summary are unchanged.
