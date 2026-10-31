@@ -104,7 +104,7 @@ No change is kept. Every tested setting is a hyperparameter change from Table II
 - **win_5_5 is unstable.** Happy F1 std is 12.18 across 3 seeds, and per-seed Happy→Excited counts swing widely (73.7 ± 22.1). Its clean gain (+0.67) is seed-paired +1.26, −0.97, +1.73.
 - **Single log not inspected:** `p2_win_5_5_clean_seed2024.log` was not read line by line; its JSON was used and is complete.
 - **Valid and test disagree** for the stage 1 settings (section 3 above and `p2-results.md`).
-- **No failed runs** in the 28 clean JSON files found (24 stage 1 + 4 stage 2 shift seeds 3 and 4); each has a selected epoch and a full per-class and confusion output.
+- **Failed runs:** none reported. `p2-results.md` states that all 28 clean JSON files (24 stage 1 + 4 stage 2 shift seeds 3 and 4) are complete. The file count was confirmed by listing; the completeness check was not re-run per file in this summary.
 - **Paper claims:** none new in p2.
 
 ## 7. Merge recommendation
