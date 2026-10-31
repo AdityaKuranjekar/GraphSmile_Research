@@ -31,7 +31,7 @@ in `docs/paper_vs_reproduced.pdf`.
 - **Hardware:** NVIDIA A100-PCIE-40GB on a shared server. Other users ran jobs on the same GPU.
 - **Software:** Python 3.10, PyTorch 2.0.0 with CUDA 11.7, NumPy 1.26.4, pandas 2.2.3, scikit-learn 1.6.1.
 - **Data:** the four feature pickles from the dataset release (`README.md`), not included in this repository.
-- **Seeds:** the code fixes the seed to 2024. Only one seed was run, so run-to-run spread is not measured.
+- **Seeds:** the code fixes the seed to 2024. The main tables use that one seed. The IEMOCAP-6 base was also run with five seeds (2024, 1, 2, 3, 4); see "Five-seed paper-protocol base" in section 4. All other datasets and ablations are single-seed, so their run-to-run spread is not measured.
 
 ## 3. Protocol
 
@@ -265,7 +265,7 @@ The stage 1 gains for shift_5 and shift_10 (+1.4 to +1.6 WF1 on 3 seeds) did not
 
 ## 5. Differences that remain
 
-1. **IEMOCAP-6 is 1.5 points below the paper** on ACC and WF1, mainly in Happy (-8.2). Only one seed was run, so we cannot say whether this is run-to-run variation or a real difference.
+1. **IEMOCAP-6 is about 1.2 points below the paper.** Under the paper protocol (best test epoch), the five-seed mean is 71.61 ± 0.36 WF1 and 71.62 ± 0.31 ACC, against the paper's 72.81 and 72.77. All five seeds (WF1 71.17 to 71.93) are below the paper's value, so seed variation alone does not explain the gap. The seed-2024 run used in the main tables (71.17) is the lowest of the five. The gap is largest in Happy (-8.2 in that run); Happy F1 varies by several points between seeds. The paper does not report its own seed spread.
 2. **Feature files:** we used the feature pickles from the dataset release. The paper's exact files may differ, which is untested.
 3. **Test-set selection:** the code picks the best epoch by test F1, as described in section 3.
 4. **Unverified MSAC runs:** No L_e (IEMOCAP-6, IEMOCAP-4) and No L_e & L_o (IEMOCAP-4) are far below the paper. Their training logs need checking, and a rerun with another seed would show whether the result is stable.
