@@ -235,6 +235,34 @@ The paper states an L2 weight of 1e-3. The repository default is 1e-4.
 
 The change in L2 moves IEMOCAP-6 by less than 0.2 points, so it does not explain the 1.5-point gap to the paper.
 
+### Five-seed paper-protocol base (IEMOCAP-6)
+
+This replaces the single-seed note in section 2 for the base row. Paper protocol: default `--select_on test`, seeds 2024, 1, 2, 3, 4.
+
+The `Test performance..` line prints `max(all_acc_emo)` and `max(all_f1_emo)`, so each value is the maximum over epochs of that metric on its own. The two maxima can come from different epochs. This is the same convention as the IEMOCAP-6 rows above.
+
+| Setting | ACC mean ± std | WF1 mean ± std | Per-seed WF1 (2024 / 1 / 2 / 3 / 4) |
+|---|---|---|---|
+| base | 71.62 ± 0.31 | 71.61 ± 0.36 | 71.17 / 71.88 / 71.79 / 71.93 / 71.26 |
+| shift_5 | 71.52 ± 0.20 | 71.48 ± 0.21 | 71.55 / 71.34 / 71.76 / 71.51 / 71.22 |
+| shift_10 | 71.49 ± 0.37 | 71.49 ± 0.32 | 71.23 / 71.72 / 71.77 / 71.68 / 71.07 |
+
+Std is the sample std (n = 5). Source logs: `results/logs/p2_<setting>_paper_seed<seed>.log`. The WF1 means match `results/experiments/p2-results.md`.
+
+For reference, the paper reports 72.77 ACC for this dataset (Table IV). Our base is about 1.1 points below on ACC.
+
+### Negative results
+
+No setting was kept. Each one failed the keep rule: the clean 5-seed mean must beat the clean baseline by more than the baseline std, and the paper-protocol WF1 must not be worse.
+
+| Setting | Clean WF1 (baseline 68.26 ± 0.94) | Paper-protocol WF1 (base 71.61) | Result |
+|---|---|---|---|
+| Class weighting (`--class_weight`) | 68.38 ± 0.62 (Happy 44.80 ± 4.34) | not checked here | No measurable gain |
+| shift_5 | 68.52 ± 1.73 (+0.26) | 71.48 (−0.13) | Not kept (inconclusive) |
+| shift_10 | 68.35 ± 1.58 (+0.09) | 71.49 (−0.11) | Not kept (inconclusive) |
+
+The stage 1 gains for shift_5 and shift_10 (+1.4 to +1.6 WF1 on 3 seeds) did not hold on five seeds. Details: `results/experiments/p2-results.md`.
+
 ## 5. Differences that remain
 
 1. **IEMOCAP-6 is 1.5 points below the paper** on ACC and WF1, mainly in Happy (-8.2). Only one seed was run, so we cannot say whether this is run-to-run variation or a real difference.
