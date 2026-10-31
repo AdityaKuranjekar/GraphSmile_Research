@@ -1,56 +1,46 @@
 # p2 summary: IEMOCAP-6 sensitivity to window, shift window, depth and loss weights
 
-Facts only. Where a number was not measured, it says so.
+Facts only. "not measured" means no file in this checkout or in `server_pass2` holds the number.
 
 ## 1. Identity
 
-- **Branch:** `experiments/p1b-provenance`
-- **Latest commit before this summary:** `f284518` ("p2: fix stale stage 2 wording in results"). `main` contains this branch's work as merge `ab136c2`.
-- **Base commit:** `d12f026` (merge-base of the branch and `main` before the merge).
-- **Pass id:** p2
-- **What it tests:** whether IEMOCAP-6 results change when the window sizes, the shift window, the heterogeneous layer depth or the loss weights are varied from the paper configuration. Each setting changes one value from the paper baseline.
+- Branch: `experiments/p1b-provenance` (the pass-2 work was committed on this branch).
+- Latest commit on the branch when this summary was written: `f284518` (`p2: fix stale stage 2 wording in results`). The summary commit is added on top of it.
+- Base commit: `0905459` (`p1b: server files are byte-identical to README release (all four)`), the last commit before the p2 work.
+- Note: the branch is already merged into `main` by merge commit `ab136c2`, which was made before this summary was written, not by this session.
+- Pass id: `p2`. Tests whether changing the window size, shift window, depth or loss weights moves IEMOCAP-6 WF1 under the clean protocol (`--clean_valid --select_on valid`). Two-stage screen: stage 1 on 3 seeds, stage 2 on 5 seeds for promoted settings.
 
-## 2. Code changes (`git diff d12f026..HEAD`)
-
-Files changed on this branch:
+## 2. Code changes (`git diff 0905459 f284518`)
 
 | File | Change |
 |---|---|
-| `scripts/run_pass2.sh` | New, 92 lines. Launch script for the sweep. It passes existing flags only. |
-| `results/experiments/p1b-provenance.md` | New, 236 lines. Data provenance checks. |
-| `results/experiments/p2-results.md` | New, 126 lines. Stage 1 and stage 2 results and decisions. |
+| `scripts/run_pass2.sh` | New. Runs the sweep. Adds no flags to `run.py`. Variables: `PROTOCOLS` (default `clean`), `SEEDS` (default `2024 1 2`), `SETTINGS`. Skips the baseline clean run when `p0c_seed<seed>.json` exists. |
+| `results/experiments/p2-results.md` | New. Results and decisions for stages 1 and 2. |
 
-`run.py`, `trainer.py`, `model.py` and `scripts/run_all.sh` are **unchanged** from the base.
+`run.py` and `scripts/run_all.sh` have no diff on this branch against the base (`git diff --stat 0905459 f284518 -- run.py scripts/run_all.sh` is empty).
 
-**New flags:** none in this pass. The sweep uses flags that already exist in `main`:
+No new flag was added in p2. The flags the script uses were added in earlier passes:
 
-- `--clean_valid`: default off (`run.py` line 135).
-- `--select_on`: default `test`, choices `test` or `valid` (`run.py` line 132).
-- `--seed`: default 2024 (`run.py` line 130).
-- `--out_json`: default empty (`run.py` line 140).
-- `--shift_win`: default 12 in `run.py` (line 112).
-- `--heter_n_layers`: default `[6, 6, 6]` in `run.py` (line 100).
-- `--win`, `--lambd`: existing flags.
+| Flag | Default | Effect | Added in |
+|---|---|---|---|
+| `--select_on {test,valid}` | `test` | Epoch chosen by test (original) or by valid F1 | `7b42cf2` (p0) |
+| `--clean_valid` | off | Train on idx[split:], validate on idx[:split] | `ed1b437` (p1) |
+| `--out_json PATH` | `''` | Writes selected-epoch per-class results to JSON | `7b42cf2` (p0) |
+| `--seed` | 2024 | Random seed | `7b42cf2` (p0) |
+| `--class_weight` | off | Inverse-frequency weighting (not used in p2) | `dd0b991` (p1) |
 
-**Checks requested:**
-
-- **(a) Every new behaviour is behind a flag that defaults off:** not applicable. No new behaviour was added in this pass.
-- **(b) A run with default flags gives the same result as `main`:** not tested in this pass. No run with default flags was made on this branch.
-- **(c) Hyperparameters in `scripts/run_all.sh` are unchanged:** confirmed. `run_all.sh` is not in the diff. Its IEMOCAP row is `17 17 | 7 7 7 | drop 0.2 | shift 19 | lambd 1.0 1.0 0.7`. `run_pass2.sh` base uses the same values.
-
-**Note:** the `run.py` defaults for `--shift_win` (12) and `--heter_n_layers` (6, 6, 6) differ from the `run_all.sh` IEMOCAP values. Every pass 2 run passes its values explicitly, so the defaults did not affect these results.
+Checks:
+- (a) Every new behaviour behind a default-off flag: the flags above default off except `--select_on` (default `test`, the original behaviour), which is the same as before. Not applicable to p2 itself because p2 adds no behaviour to `run.py`.
+- (b) Default flags give the same result as main: **not tested** on GPU for this pass. A CPU synthetic-pickle check for p0 (`results/experiments/p0-protocol.md`) showed the default run prints the original line; that is not a result check.
+- (c) Table III hyperparameters in `scripts/run_all.sh` unchanged: **yes**, the file has no diff on the branch since the base (or since `d12f026` on main). The p2 script hard-codes its own values (`--drop 0.2 --shift_win 19 --win 17 17 --heter_n_layers 7 7 7 --lambd 1.0 1.0 0.7 --l2 1e-3`); these match `p0-protocol.md`.
 
 ## 3. Results
 
-All clean-protocol numbers are test, from JSON files, mean ± sample std over seeds. The clean protocol selects the epoch on **valid** (`--clean_valid --select_on valid`).
+Clean protocol, test WF1 and per-class F1 (%), mean ± sample std (ddof=1).
 
-The paper-protocol numbers are test-selected (`--select_on test`). They come from the `F-Score` line in each log, because paper runs write no JSON.
+Stage 1, seeds 2024, 1, 2. Source: `results/experiments/p2-results.md` (JSON files `p2_<setting>_clean_seed<seed>.json` and `p0c_seed<seed>.json` in `D:\NotesSem 5\Research_Sem5_Rashmi\server_pass2\experiments`, not copied into this repo).
 
-### 3a. Stage 1: clean protocol, 3 seeds (2024, 1, 2)
-
-Files: `results/experiments/p2_<setting>_clean_seed{2024,1,2}.json` and `p0c_seed{2024,1,2}.json`.
-
-| Setting | Seeds | Clean WF1 mean ± std | Paper WF1 | Happy F1 (mean ± std) | Excited F1 (mean ± std) |
+| Setting | Seeds | Clean WF1 | Paper-protocol WF1 | Happy F1 | Excited F1 |
 |---|---|---|---|---|---|
 | p0c baseline | 2024, 1, 2 | 67.71 ± 0.64 | not measured | 47.75 ± 1.69 | 75.21 ± 0.14 |
 | heter_4 | 2024, 1, 2 | 68.10 ± 0.97 | not measured | 46.04 ± 4.64 | 73.03 ± 1.44 |
@@ -62,97 +52,78 @@ Files: `results/experiments/p2_<setting>_clean_seed{2024,1,2}.json` and `p0c_see
 | win_10_2 | 2024, 1, 2 | 66.52 ± 1.05 | not measured | 42.96 ± 3.71 | 70.30 ± 1.90 |
 | win_5_5 | 2024, 1, 2 | 68.38 ± 1.04 | not measured | 44.60 ± 12.18 | 74.91 ± 0.49 |
 
-### 3b. Stage 2: 5 seeds (2024, 1, 2, 3, 4)
+Stage 2, seeds 2024, 1, 2, 3, 4. Clean WF1 and Happy/Excited re-derived from the JSON files in `server_pass2` (`test_f1_emo`, `test_per_class_f1`).
 
-Files: `results/experiments/p2_shift_{5,10}_clean_seed{2024,1,2,3,4}.json`, `p0c_seed{2024,1,2,3,4}.json`, and paper results from `results/logs/p2_{base,shift_5,shift_10}_paper_seed{...}.log`.
-
-| Setting | Seeds | Clean WF1 mean ± std | Paper WF1 mean ± std | Happy F1 (clean) | Excited F1 (clean) |
+| Setting | Seeds | Clean WF1 | Paper-protocol WF1 | Happy F1 | Excited F1 |
 |---|---|---|---|---|---|
-| base (p0c clean, paper runs) | 2024, 1, 2, 3, 4 | 68.26 ± 0.94 | 71.61 ± 0.36 | 45.62 (mean only) | 76.10 (mean only) |
-| shift_5 | 2024, 1, 2, 3, 4 | 68.52 ± 1.73 | 71.48 ± 0.21 | 48.39 (mean only) | 74.90 (mean only) |
-| shift_10 | 2024, 1, 2, 3, 4 | 68.35 ± 1.58 | 71.49 ± 0.32 | 49.93 (mean only) | 76.10 (mean only) |
+| p0c baseline | 5 | 68.26 ± 0.94 | 71.61 ± 0.36 (see section 6) | 45.62 ± 4.17 (memory file, not re-derived) | ~76 (std 0.01) |
+| shift_5 | 5 | 68.52 ± 1.73 | 71.48, std not measured | ~48.4 (Δ +2.77 vs base, from p2-results.md) | ~75 (Δ −1.20) |
+| shift_10 | 5 | 68.35 ± 1.58 | 71.49, std not measured | ~49.9 (Δ +4.31) | ~76 (Δ +0.01) |
 
-Std for the Happy and Excited columns was not measured in this report.
+Paper-protocol Happy and Excited F1 for every stage-2 setting: **not measured** (no JSON or per-class output found).
 
-Per-seed clean WF1 (2024 / 1 / 2 / 3 / 4):
-- shift_5: 68.51 / 69.88 / 69.02 / 69.63 / 65.57
-- shift_10: 69.72 / 70.18 / 67.87 / 67.61 / 66.36
-
-Per-seed paper WF1 (2024 / 1 / 2 / 3 / 4):
-- base: 71.17 / 71.88 / 71.79 / 71.93 / 71.26
-- shift_5: 71.55 / 71.34 / 71.76 / 71.51 / 71.22
-- shift_10: 71.23 / 71.72 / 71.77 / 71.68 / 71.07
-
-**Metric used to choose the setting:** valid, through the clean protocol (`--select_on valid`). The paper protocol uses test by design and is shown for comparison only.
+Selection metric: stage 1 promoted settings by **test** WF1 (see section 6). The stage-1 valid WF1 column in `p2-results.md` does not agree with test on the ranking.
 
 ## 4. Decision against the rule
 
-**Rule (applied literally):** keep only if the 5-seed clean WF1 mean beats the clean baseline by more than the baseline std, **and** the paper-protocol WF1 is not worse.
+Rule as written: keep only if the clean 5-seed mean beats the clean baseline by more than the baseline std, AND the paper-protocol number is not worse.
 
-Baseline clean std = 0.94. Baseline paper std = 0.36.
+Stage 2 (baseline clean = 68.26 ± 0.94; threshold = 68.26 + 0.94 = 69.20; paper baseline = 71.61):
 
-| Setting | Clean Δ WF1 | Clean test (Δ > 0.94?) | Paper Δ WF1 | Paper not worse? | Verdict |
-|---|---|---|---|---|---|
-| shift_5 | 68.52 − 68.26 = +0.26 | No (0.26 < 0.94) | 71.48 − 71.61 = −0.13 | Within noise (0.13 < 0.36) | **Inconclusive** |
-| shift_10 | 68.35 − 68.26 = +0.09 | No (0.09 < 0.94) | 71.49 − 71.61 = −0.11 | Within noise (0.11 < 0.36) | **Inconclusive** |
+| Setting | Clean criterion | Paper criterion | Verdict |
+|---|---|---|---|
+| shift_5 | 68.52 − 68.26 = +0.26; needs > 0.94 → **fails** | 71.48 − 71.61 = −0.13 (worse) → **fails** | **reject** (not kept) |
+| shift_10 | 68.35 − 68.26 = +0.09; needs > 0.94 → **fails** | 71.49 − 71.61 = −0.11 (worse) → **fails** | **reject** (not kept) |
 
-Neither setting is kept. Neither is rejected, because neither is worse on clean by more than the std.
+Stage 1 (3-seed baseline 67.71 ± 0.64; threshold 68.35). Clean criterion only, because paper numbers were not measured. The combined rule cannot be applied at stage 1.
 
-**Stage 1 verdicts (3 seeds, 3-seed baseline std 0.64), for reference:**
-- shift_10 and shift_5 passed (+1.55 and +1.43).
-- win_5_5 passed marginally (+0.67).
-- win_10_2 was rejected (−1.19).
-- heter_4, lambd_0.3, lambd_0.5 and win_10_10 were inconclusive (+0.17 to +0.39).
+| Setting | Clean Δ vs 67.71 | Clears 0.64? | Verdict |
+|---|---|---|---|
+| shift_10 | +1.55 | yes | **inconclusive** (paper not measured; promoted, then rejected in stage 2) |
+| shift_5 | +1.43 | yes | **inconclusive** (same) |
+| win_5_5 | +0.67 | yes, by 0.03 | **inconclusive** (not promoted; paper not measured) |
+| heter_4 | +0.39 | no | **inconclusive** |
+| lambd_0.5 | +0.21 | no | **inconclusive** |
+| lambd_0.3 | +0.17 | no | **inconclusive** |
+| win_10_10 | +0.17 | no | **inconclusive** |
+| win_10_2 | −1.19 | worse by more than 0.64 | **reject** |
 
-Stage 1 verdicts were overturned at stage 2 for shift_5 and shift_10 (+1.43 → +0.26 and +1.55 → +0.09). win_5_5 was not promoted to stage 2.
+Note: stage 1 used the 3-seed baseline (67.71 ± 0.64). The rule specifies the 5-seed baseline (68.26 ± 0.94). Against the 5-seed baseline, no stage-1 setting clears 0.94 on the 3-seed means except shift_10 (69.26 − 68.26 = +1.00) and shift_5 (69.14 − 68.26 = +0.88, fails). Those comparisons mix seed sets and are shown only for transparency.
+
+**Overall: no setting is kept.**
 
 ## 5. Deviations
 
-**No kept change.** Nothing from this pass is kept.
-
-The settings that were tested differ from the paper's Table III values in one parameter each, so they are **tuned variants, not paper settings**:
-- shift_5 and shift_10 change `--shift_win` from 19 to 5 or 10.
-- win_5_5, win_10_10 and win_10_2 change `--win`.
-- heter_4 changes `--heter_n_layers` from 7 7 7 to 4 4 4.
-- lambd_0.3 and lambd_0.5 change the third or second `--lambd` value.
+No change is kept. Every tested setting is a hyperparameter change from Table III (window, shift window, depth, loss weights). If any were kept it would be labelled "tuned variant, not paper setting". Architecture and code are unchanged.
 
 ## 6. Unverified or weak points
 
-- **Paper-protocol numbers are not in JSON.** They come from the log line `Acc: …, F-Score: …`. The code that prints it (`run.py` line 586) prints `max(all_f1_emo)` when no validation selection is made, which is the best-epoch test F1. I read the print statement; I did not check how `all_f1_emo` is built line by line.
-- **Paper per-class F1 for every setting was not measured.** Only WF1 is available.
-- **Paper selection protocol not confirmed.** The paper's epoch-selection method is not stated in the pages read (see `p2-plan.md`). The paper-protocol baseline here is the repo's test-selected default, not a value taken from the paper.
-- **Paper claim not verified:** the Stochastic Weight Averaging hypothesis in `p2-plan.md` was not tested in this pass. `--avg_last` was not used by `run_pass2.sh`.
-- **Single-seed runs:** none. Every setting has at least 3 seeds.
-- **Failed or incomplete runs:**
-  - The first paper batch (06:48) failed in about one second because `torch` was missing in the base conda environment. No results came from it.
-  - `p2_shift_5_paper_seed2024` was cut off during the SSH disconnect at about 16:15. Its log was overwritten by the restart, and it produced no result.
-  - `p2_shift_5_paper_seed3` was cut off at the start of its run after another disconnect. It was rerun and finished.
-  - `p2_win_5_5_clean_seed2024.log` was flagged as possibly damaged by a duplicate job. Its JSON is complete. The log was not checked line by line.
-- **Valid and test disagree:** the clean baseline (68.26) is 3.35 below the paper-protocol baseline (71.61) for the same configuration. This gap is from epoch selection, not from the setting.
-- **Stage 1 did not hold at stage 2.** The shift gains dropped from about +1.5 at 3 seeds to +0.1 to +0.3 at 5 seeds.
-- **Happy F1 has high seed variance:** win_5_5 Happy std is 12.18 over 3 seeds.
+- **Paper-protocol stage 2 numbers have no source file here.** The values 71.61 ± 0.36 (base), 71.48 (shift_5) and 71.49 (shift_10) come from `p2-results.md`, which says they were read from each run's log `F-Score` line. No such log or JSON exists in `server_pass2` or in this repo. They are reported, not verified. The shift rows give no std.
+- **Stage 2 candidates were chosen on test.** `p2-results.md` promotes shift_5 and shift_10 because their **test** gains (+1.55, +1.43) were the largest. Validation did not agree: the shift settings are +0.33 over baseline on valid, within one baseline std, and the valid ranking put win_10_10 and win_5_5 highest. This breaks the repo rule of no test-split selection. The stage 2 result still does not keep either setting, so no decision depends on it.
+- **Stage 1 has 3 seeds**, and its keep verdicts are not final. The baseline std (0.64) comes from 3 seeds and is itself noisy.
+- **win_5_5 is unstable.** Happy F1 std is 12.18 across 3 seeds, and per-seed Happy→Excited counts swing widely (73.7 ± 22.1). Its clean gain (+0.67) is seed-paired +1.26, −0.97, +1.73.
+- **Single log not inspected:** `p2_win_5_5_clean_seed2024.log` was not read line by line; its JSON was used and is complete.
+- **Valid and test disagree** for the stage 1 settings (section 3 above and `p2-results.md`).
+- **No failed runs** in the 28 clean JSON files found (24 stage 1 + 4 stage 2 shift seeds 3 and 4); each has a selected epoch and a full per-class and confusion output.
+- **Paper claims:** none new in p2.
 
 ## 7. Merge recommendation
 
-**Already on `main` (merge `ab136c2`):**
-- `scripts/run_pass2.sh`: safe. Only existing flags, no defaults changed.
-- `results/experiments/p1b-provenance.md`: safe.
-- `results/experiments/p2-results.md`: safe. It records the negative stage 2 result.
+Safe to merge (already on main through `ab136c2`; merging was not done in this session):
+- `scripts/run_pass2.sh`: a script only, no change to `run.py` or to any default behaviour.
+- `results/experiments/p2-results.md` and `results/experiments/p2-plan.md`: documentation.
+- This file, `results/experiments/p2-summary.md`.
 
-**Stays on the branch:**
-- `results/experiments/p2-summary.md` (this file): hold until you decide whether to merge it.
-- The untracked files `inspect_pkl.py`, `p0.patch`, `p1.patch` and `p1_clean.patch`: not committed. Their `run.py` changes are already in `main`.
+Stay on the branch / not merge:
+- Nothing. No change was kept, so there is no tuned variant to merge.
+- The per-run JSON and log files are not in the repo. They are in `D:\NotesSem 5\Research_Sem5_Rashmi\server_pass2`. Whether to commit them (size not measured) is a separate decision.
 
-**GPU runs needed before a keep decision:**
-- **None for shift_5 or shift_10**, because both are already decided as not kept.
-- **If a different setting were promoted,** each one needs 7 runs: 5 paper (seeds 2024, 1, 2, 3, 4) and 2 clean (seeds 3, 4). That is about 1 hour at 8.2 minutes per run.
-
-Commands for a new setting `<name>` (see `results/experiments/p2-results.md` for the stage 2 commands used here):
+GPU runs still needed:
+- **Stage 2 paper-protocol files**: if these runs were made on the server, their JSON files need copying into the repo so the paper numbers can be checked. Not measured here whether they exist.
+- **To finish the combined rule for stage 1 settings** (only if you want win_5_5 decided rather than left inconclusive): paper protocol, seeds 2024, 1, 2, that is 3 runs:
 
 ```bash
-SETTINGS="<name>" PROTOCOLS="paper" SEEDS="2024 1 2 3 4" GPU=0 bash scripts/run_pass2.sh
+SETTINGS="win_5_5" PROTOCOLS="paper" SEEDS="2024 1 2" GPU=0 bash scripts/run_pass2.sh
 ```
 
-```bash
-SETTINGS="<name>" PROTOCOLS="clean" SEEDS="3 4" GPU=0 bash scripts/run_pass2.sh
-```
+- Nothing else is needed for the current decisions, because shift_5 and shift_10 are already rejected on the rule and the rest fail the clean criterion.
