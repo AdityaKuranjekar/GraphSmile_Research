@@ -25,6 +25,22 @@ def seed_everything(seed=None):
     torch.backends.cudnn.deterministic = True
 
 
+def sync_optimizer(model, optimizer):
+    """Add parameters that were created after the optimizer was built.
+
+    module.py creates edge_weight lazily inside forward, so it is not in the
+    optimizer that run.py builds before training. Without this, edge_weight
+    stays at its initial value of 1. Replaced parameters are left in the
+    optimizer; AdamW skips parameters whose grad is None.
+    Returns the number of parameters added.
+    """
+    in_opt = {id(p) for g in optimizer.param_groups for p in g['params']}
+    new = [p for p in model.parameters() if id(p) not in in_opt]
+    if new:
+        optimizer.add_param_group({'params': new})
+    return len(new)
+
+
 def train_or_eval_model(
     model,
     loss_function_emo,
@@ -85,6 +101,14 @@ def train_or_eval_model(
         logit_emo, logit_sen, logit_sft, extracted_feature = model(
             textf0, textf1, textf2, textf3, visuf, acouf, umask, qmask,
             dia_lengths)
+
+        if train:
+            # Parameters created during this forward (edge_weight) join the optimizer.
+            sync_optimizer(model, optimizer)
+            if iter == 0:
+                n_opt = sum(len(g['params']) for g in optimizer.param_groups)
+                n_model = sum(1 for _ in model.parameters())
+                print('optimizer params: {}, model params: {}'.format(n_opt, n_model))
 
         prob_emo = F.log_softmax(logit_emo, -1)
         loss_emo = loss_function_emo(prob_emo, label_emo)

@@ -255,11 +255,13 @@ def get_data_loaders(path, dataset_class, batch_size, valid_ratio, num_workers,
     return train_loader, valid_loader, test_loader
 
 
-def setup_samplers(trainset, valid_ratio, epoch):
-    train_sampler, valid_sampler = get_train_valid_sampler(
-        trainset, valid_ratio=valid_ratio)
-    train_sampler.set_epoch(epoch)
-    valid_sampler.set_epoch(epoch)
+def setup_samplers(train_loader, valid_loader, epoch):
+    # The loaders hold these samplers. set_epoch must act on them, or the
+    # training order is the same every epoch.
+    train_loader.sampler.set_epoch(epoch)
+    valid_loader.sampler.set_epoch(epoch)
+    print('train order, epoch {}: first 5 positions {}'.format(
+        epoch, list(train_loader.sampler)[:5]))
 
 
 def main(local_rank):
@@ -395,16 +397,7 @@ def main(local_rank):
     all_f1_sft, all_acc_sft = [], []
 
     for epoch in range(n_epochs):
-        if args.dataset == 'MELD':
-            trainset = MELDDataset_BERT(MELD_path)
-        elif args.dataset == 'IEMOCAP':
-            trainset = IEMOCAPDataset_BERT(IEMOCAP_path)
-        elif args.dataset == 'IEMOCAP4':
-            trainset = IEMOCAPDataset_BERT4(IEMOCAP4_path)
-        elif args.dataset == 'CMUMOSEI7':
-            trainset = CMUMOSEIDataset7(CMUMOSEI7_path)
-
-        setup_samplers(trainset, valid_ratio=0.1, epoch=epoch)
+        setup_samplers(train_loader, valid_loader, epoch=epoch)
 
         start_time = time.time()
 
