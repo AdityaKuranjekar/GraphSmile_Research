@@ -278,6 +278,7 @@ Each pass has a summary under `results/experiments/`. No tuned setting was adopt
 | Pass | Question | Result |
 |---|---|---|
 | p0 | Seed variance, epoch chosen on validation, original split (`p0_*` logs) | The original code's validation dialogues overlap its training set, so this selector is contaminated. IEMOCAP-6 WF1 is 70.82 ± 0.47 over 5 seeds. |
+| p0 (other datasets) | Clean split, epoch chosen on validation, 5 seeds (`p0_iemocap4_*`, `p0_meld_*`, `p0_mosei_*` logs on the server; each log records `clean_valid=True`) | WF1 over 5 seeds: IEMOCAP-4 82.48, MELD 65.38, CMU-MOSEI 43.16 (paper-protocol single seed: 85.98, 66.55, 43.96). Logs are not yet in the repo. |
 | p0c | **Clean baseline:** `--clean_valid`, epoch chosen on validation (`p0c_*` logs) | IEMOCAP-6 WF1 **68.26 ± 0.94** over 5 seeds. This is the baseline every later clean-protocol pass is compared against. |
 | p1c | Class-weighted emotion loss (`--class_weight`) on the clean split (`p1c_*` logs) | 68.38 ± 0.62 against the p0c baseline 68.26. No measurable gain, not kept. (The p1 summary names the baseline "p0c" and the class-weight run "p1c".) |
 | p1b | Are our feature files the released ones? | All four server files are byte-identical to the README release (md5). IEMOCAP-6 matches Table II; MELD is one dialogue short and CMU-MOSEI counts differ from Table II in the released file itself. |
