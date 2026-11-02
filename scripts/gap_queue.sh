@@ -19,6 +19,12 @@ shift
 cd "$(dirname "$0")/.."
 mkdir -p results/logs results/experiments
 
+# Fail fast if the wrong Python is active (this happened once: waiters started under 'base').
+if ! python -c "import torch" 2>/dev/null; then
+  echo "ERROR: 'python' cannot import torch. Run 'conda activate graphsmile' first." >&2
+  exit 1
+fi
+
 COMMON="--classify emotion --textf_mode textf0 --loss_type emo_sen_sft --l2 1e-3"
 
 ds_args() {  # same hyperparameters as run_phase0_fixed.sh and REPRODUCTION.md
@@ -42,7 +48,8 @@ run_one() {  # run_one <tag> <seed> <run.py args...>
   python -u run.py --gpu "$GPU" --port "$port" --seed "$seed" $sel "$@" \
     --out_json "results/experiments/${tag}_seed${seed}.json" \
     > "results/logs/${tag}_seed${seed}.log" 2>&1
-  echo "[$(date +%T)] END   $tag seed=$seed exit=$?"
+  local rc=$?
+  echo "[$(date +%T)] END   $tag seed=$seed exit=$rc"
 }
 
 for JOB in "$@"; do
