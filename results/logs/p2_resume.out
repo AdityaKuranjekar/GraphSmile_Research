@@ -1,0 +1,18 @@
+nohup: ignoring input
+Planned runs: 2 (settings: shift_5 | protocols: paper | seeds: 3 4)
+[17:42:40] p2_shift_5_paper_seed3
+[17:50:44] p2_shift_5_paper_seed4
+Done. Logs: results/logs/p2_*.log
+Planned runs: 5 (settings: shift_10 | protocols: paper | seeds: 2024 1 2 3 4)
+[17:57:28] p2_shift_10_paper_seed2024
+[18:04:32] p2_shift_10_paper_seed1
+[18:10:50] p2_shift_10_paper_seed2
+[18:17:10] p2_shift_10_paper_seed3
+[18:23:10] p2_shift_10_paper_seed4
+Done. Logs: results/logs/p2_*.log
+Planned runs: 4 (settings: shift_5 shift_10 | protocols: clean | seeds: 3 4)
+[18:29:40] p2_shift_5_clean_seed3
+[18:35:56] p2_shift_5_clean_seed4
+[18:42:52] p2_shift_10_clean_seed3
+[18:49:43] p2_shift_10_clean_seed4
+Done. Logs: results/logs/p2_*.log

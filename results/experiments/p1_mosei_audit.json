@@ -1,0 +1,108 @@
+{
+  "file": "/DATA/rashmi_2521cs34/data/CMUMOSEI7.pkl",
+  "dialogues_in_pickle": 3288,
+  "train_test_overlap": 0,
+  "train_val": {
+    "dialogues": 2595,
+    "utterances": 19050,
+    "dialogue_len_mean": 7.34,
+    "dialogue_len_median": 5.0,
+    "dialogue_len_max": 98,
+    "share_dialogues_len1": 0.11,
+    "emo7_counts": {
+      "HNeg": 799,
+      "Neg": 2093,
+      "WNeg": 3007,
+      "Neutral": 4173,
+      "WPos": 5896,
+      "Pos": 2530,
+      "HPos": 552
+    },
+    "emo7_share": {
+      "HNeg": 0.0419,
+      "Neg": 0.1099,
+      "WNeg": 0.1578,
+      "Neutral": 0.2191,
+      "WPos": 0.3095,
+      "Pos": 0.1328,
+      "HPos": 0.029
+    },
+    "sentiment3_counts": {
+      "neg": 5899,
+      "zero": 4173,
+      "pos": 8978
+    }
+  },
+  "test": {
+    "dialogues": 693,
+    "utterances": 4184,
+    "dialogue_len_mean": 6.04,
+    "dialogue_len_median": 4.0,
+    "dialogue_len_max": 52,
+    "share_dialogues_len1": 0.139,
+    "emo7_counts": {
+      "HNeg": 22,
+      "Neg": 159,
+      "WNeg": 602,
+      "Neutral": 921,
+      "WPos": 1666,
+      "Pos": 692,
+      "HPos": 122
+    },
+    "emo7_share": {
+      "HNeg": 0.0053,
+      "Neg": 0.038,
+      "WNeg": 0.1439,
+      "Neutral": 0.2201,
+      "WPos": 0.3982,
+      "Pos": 0.1654,
+      "HPos": 0.0292
+    },
+    "sentiment3_counts": {
+      "neg": 783,
+      "zero": 921,
+      "pos": 2480
+    }
+  },
+  "paper_table2_reference": {
+    "train_val_dialogues": 2549,
+    "train_val_utterances": 18198,
+    "test_dialogues": 646,
+    "test_utterances": 4662
+  },
+  "modalities": {
+    "text": {
+      "missing_dialogues": 0,
+      "feature_shapes": [
+        "[1024]"
+      ],
+      "rows": 23234,
+      "rows_with_nan": 0,
+      "rows_with_inf": 0,
+      "rows_all_zero": 0,
+      "dialogues_length_mismatch_vs_labels": 0
+    },
+    "audio": {
+      "missing_dialogues": 0,
+      "feature_shapes": [
+        "[384]"
+      ],
+      "rows": 23234,
+      "rows_with_nan": 0,
+      "rows_with_inf": 0,
+      "rows_all_zero": 0,
+      "dialogues_length_mismatch_vs_labels": 0
+    },
+    "visual": {
+      "missing_dialogues": 0,
+      "feature_shapes": [
+        "[35]"
+      ],
+      "rows": 23234,
+      "rows_with_nan": 0,
+      "rows_with_inf": 0,
+      "rows_all_zero": 168,
+      "dialogues_length_mismatch_vs_labels": 0
+    }
+  }
+}

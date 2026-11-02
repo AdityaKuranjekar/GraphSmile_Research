@@ -1,0 +1,30 @@
+nohup: ignoring input
+Collapse check: 9 runs (3 variants x 3 seeds), sequential.
+[18:47:25] IEMOCAP / no_Le / seed 2024 (port 17001) -> results/logs/p3_IEMOCAP_no_Le_seed2024.log
+  FAILED: see results/logs/p3_IEMOCAP_no_Le_seed2024.log
+[18:47:25] IEMOCAP / no_Le / seed 1 (port 17002) -> results/logs/p3_IEMOCAP_no_Le_seed1.log
+  FAILED: see results/logs/p3_IEMOCAP_no_Le_seed1.log
+[18:47:25] IEMOCAP / no_Le / seed 2 (port 17003) -> results/logs/p3_IEMOCAP_no_Le_seed2.log
+  FAILED: see results/logs/p3_IEMOCAP_no_Le_seed2.log
+[18:47:25] IEMOCAP4 / no_Le / seed 2024 (port 17004) -> results/logs/p3_IEMOCAP4_no_Le_seed2024.log
+  FAILED: see results/logs/p3_IEMOCAP4_no_Le_seed2024.log
+[18:47:25] IEMOCAP4 / no_Le / seed 1 (port 17005) -> results/logs/p3_IEMOCAP4_no_Le_seed1.log
+  FAILED: see results/logs/p3_IEMOCAP4_no_Le_seed1.log
+[18:47:25] IEMOCAP4 / no_Le / seed 2 (port 17006) -> results/logs/p3_IEMOCAP4_no_Le_seed2.log
+  FAILED: see results/logs/p3_IEMOCAP4_no_Le_seed2.log
+[18:47:25] IEMOCAP4 / no_Le_Lo / seed 2024 (port 17007) -> results/logs/p3_IEMOCAP4_no_Le_Lo_seed2024.log
+  FAILED: see results/logs/p3_IEMOCAP4_no_Le_Lo_seed2024.log
+[18:47:26] IEMOCAP4 / no_Le_Lo / seed 1 (port 17008) -> results/logs/p3_IEMOCAP4_no_Le_Lo_seed1.log
+  FAILED: see results/logs/p3_IEMOCAP4_no_Le_Lo_seed1.log
+[18:47:26] IEMOCAP4 / no_Le_Lo / seed 2 (port 17009) -> results/logs/p3_IEMOCAP4_no_Le_Lo_seed2.log
+  FAILED: see results/logs/p3_IEMOCAP4_no_Le_Lo_seed2.log
+Done. Failed runs: 9 of 9
+  - IEMOCAP/no_Le/seed2024
+  - IEMOCAP/no_Le/seed1
+  - IEMOCAP/no_Le/seed2
+  - IEMOCAP4/no_Le/seed2024
+  - IEMOCAP4/no_Le/seed1
+  - IEMOCAP4/no_Le/seed2
+  - IEMOCAP4/no_Le_Lo/seed2024
+  - IEMOCAP4/no_Le_Lo/seed1
+  - IEMOCAP4/no_Le_Lo/seed2
