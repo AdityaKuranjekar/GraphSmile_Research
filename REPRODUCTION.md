@@ -273,7 +273,7 @@ The stage 1 gains for shift_5 and shift_10 (+1.4 to +1.6 WF1 on 3 seeds) did not
 
 ## 5b. Experiment record
 
-Each pass has a summary under `results/experiments/`. No tuned setting was adopted; the main tables stay at the Table III settings.
+Start with `results/experiments/README.md`, which maps every log prefix to its phase and protocol. Each pass has a summary under `results/experiments/`. No tuned setting was adopted; the main tables stay at the Table III settings.
 
 | Pass | Question | Result |
 |---|---|---|
