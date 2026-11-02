@@ -39,6 +39,10 @@ ds_args() {  # same hyperparameters as run_phase0_fixed.sh and REPRODUCTION.md
 
 run_one() {  # run_one <tag> <seed> <run.py args...>
   local tag=$1 seed=$2; shift 2
+  if [ -s "results/experiments/${tag}_seed${seed}.json" ]; then
+    echo "[$(date +%T)] SKIP  $tag seed=$seed (result already exists)"
+    return 0
+  fi
   local port=$(( 17000 + RANDOM % 2000 ))
   # --select_on valid always picks the epoch by emotion F1 (run.py), so the sentiment
   # ablations (gap4-1) use the repo default instead, which selects by sentiment F1.
