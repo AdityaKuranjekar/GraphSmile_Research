@@ -1,8 +1,8 @@
 # Gap plan: results summary (clean protocol, fixed code)
 
-**Status:** provisional. Numbers marked *n=1* or *n=3* are not final. Source: the JSON files in `results/experiments/` on the GPU server, summarised by a script that reads `test_acc_emo` and `test_f1_emo` at the epoch chosen on validation (`--clean_valid --select_on valid`). Written 2026-11-02, after the fixed Phase 0 runs finished.
+**Status:** Phase 0, Phase 0c (no-text), Phase 1.3 (modality-only) and Phase 4.1 (sentiment, MELD and MOSEI) are complete as of 3 Nov 2026. Still running: Phase 1.4 window 0 (3 seeds, MOSEI, GPU 2) and the IEMOCAP sentiment ablations (GPU 0). Source: JSON files in `results/experiments/` on the GPU server, summarised by `gap_summary.py` (`test_acc_emo`, `test_f1_emo` at the epoch chosen on validation, `--clean_valid --select_on valid`).
 
-**Code:** branch `fix/loader-reshuffle-edge-weight`. The training order is now reshuffled each epoch, and `edge_weight` is in the optimizer (see `gap-fix-loader-edge-weight.md`). All numbers here use the fixed code. Numbers from the earlier buggy code (`p0c_*`, `p0_*`, `gap-phase1-*`) are not comparable.
+**Code:** branch `fix/loader-reshuffle-edge-weight`. The training order is reshuffled each epoch, and `edge_weight` is in the optimizer (see `gap-fix-loader-edge-weight.md`). All numbers here use the fixed code. Numbers from the earlier buggy code (`p0c_*`, `p0_*`, `gap-phase1-*`) are not comparable.
 
 ## 1. Phase 0: clean baseline on fixed code (5 seeds each)
 
@@ -15,27 +15,27 @@
 
 Mean ± sample std over seeds 2024, 1, 2, 3, 4. Paper numbers are from the original code, test-selected, and not directly comparable (the MOSEI test split here has 4,184 utterances; the paper's has 4,662).
 
-The earlier buggy clean baseline for MOSEI was 45.13 / 43.16. The new value is about 1.4 ACC higher. The two standard deviations overlap, so treat this as a small shift, not a confirmed gain.
+The earlier buggy clean baseline for MOSEI was 45.13 / 43.16. The new value is about 1.4 ACC higher. The two standard deviations overlap, so treat this as a small shift, not a confirmed gain. The buggy IEMOCAP-4 baseline was 82.48 ACC; the fixed one is 81.82, a small drop.
 
 ## 2. Phase 0c: no-text baseline (clean, fixed code)
 
 | Dataset | Seeds | No-text ACC | No-text WF1 |
 |---|---|---|---|
-| IEMOCAP-4 | 1 (n=1, provisional) | 52.60 | 50.93 |
+| IEMOCAP-6 | 3 | 54.45 ± 0.89 | 53.88 ± 1.14 |
+| IEMOCAP-4 | 3 | 52.42 ± 0.22 | 51.22 ± 0.33 |
 | MELD | 3 | 48.82 ± 0.21 | 43.92 ± 1.00 |
 | CMU-MOSEI | 3 | 38.24 ± 0.15 | 28.97 ± 1.07 |
-| IEMOCAP-6 | 0 | not run yet | — |
 
 ## 3. Text dominance, Δtext = full WF1 − no-text WF1 (clean, fixed code)
 
-| Dataset | Full WF1 | No-text WF1 | Δtext | Status |
+| Dataset | Full WF1 | No-text WF1 | Δtext | Target (cut of 6–7 points) |
 |---|---|---|---|---|
-| IEMOCAP-4 | 81.84 | 50.93 | 30.91 | provisional (n=1) |
-| MELD | 65.48 | 43.92 | 21.56 | n=3 no-text |
-| CMU-MOSEI | 43.99 | 28.97 | 15.02 | n=3 no-text |
-| IEMOCAP-6 | 68.09 | — | — | not run yet |
+| IEMOCAP-6 | 68.09 | 53.88 | 14.20 | about 7–8 |
+| IEMOCAP-4 | 81.84 | 51.22 | 30.62 | about 24 |
+| MELD | 65.48 | 43.92 | 21.56 | about 15 |
+| CMU-MOSEI | 43.99 | 28.97 | 15.02 | about 8–9 |
 
-**Target (from the gap plan):** reduce Δtext by 6–7 WF1 points on every dataset, while full-model WF1 stays at or above baseline beyond seed std. The target was written against the buggy numbers, so the per-dataset targets must be recalculated from these clean Δtext values once every no-text run is in.
+Δtext is large on every dataset, so text dominance is real. No Phase 3 method has been run yet. The targets are the evaluator's 6–7 point cut applied to these clean values.
 
 ## 4. Phase 1.3: MOSEI modality contributions (clean, fixed code)
 
@@ -43,10 +43,10 @@ The earlier buggy clean baseline for MOSEI was 45.13 / 43.16. The new value is a
 |---|---|---|---|
 | text only (`t`) | 45.42 ± 0.50 | 43.57 ± 0.53 | 3 |
 | text + audio (`ta`) | 46.14 ± 0.53 | 43.63 ± 0.53 | 3 |
-| text + visual (`tv`) | 46.22 | 44.00 | 1 (provisional) |
+| text + visual (`tv`) | 45.65 ± 0.81 | 43.47 ± 0.75 | 2 |
 | all three (`tva`, full model) | 46.50 ± 0.23 | 43.99 ± 0.47 | 5 |
 
-On MOSEI, text alone reaches about 43.6 WF1, and the full model is 44.0. Audio and visual together add about 0.4 WF1. The differences between rows are about the size of the seed noise, so they are not yet conclusive. This is consistent with the evaluator's point that audio and visual are underused on MOSEI.
+On MOSEI, text alone reaches 43.6 WF1, and the full model reaches 44.0. Audio and visual add no more than about 0.4 WF1 together, which is within seed noise. The model is not using audio or visual in any meaningful way on MOSEI. This matches the evaluator's point that audio and visual are underused.
 
 ## 5. Phase 4.1: sentiment ablations (test-selected, seed 2024, one seed each)
 
@@ -59,16 +59,12 @@ Sentiment values are the maximum per-epoch `test_acc_sen` and `test_f1_sen` from
 | CMU-MOSEI | No L_e | 67.69 | 65.78 | 66.59 / 65.91 |
 | CMU-MOSEI | No L_e & L_o | 67.73 | 65.97 | 66.54 / 65.64 |
 
-The MELD and MOSEI values agree with the paper's collapsed-row replacements to within about 1 point. The IEMOCAP-6 and IEMOCAP-4 sentiment ablations are not yet run.
+The MELD and MOSEI values agree with the paper's collapsed-row replacements to within about a point. The IEMOCAP-6 and IEMOCAP-4 sentiment ablations are running on GPU 0.
 
-## 6. Still running or queued
+## 6. Still running
 
-Relaunched 2 Nov 18:05 after the earlier jobs stopped mid-run at about 17:05, with no traceback:
-- IEMOCAP-4 no-text, seeds 1 and 2 (GPU 0). Seed 2024 is done.
-- IEMOCAP-6 no-text, seeds 2024, 1, 2 (GPU 4)
-- MOSEI text + visual, seeds 1 and 2 (GPU 2); then Phase 1.4 window 0, 3 seeds
-
-Still to run: IEMOCAP-6 and IEMOCAP-4 sentiment ablations (no result JSON is written, so the skip check does not cover them).
+- IEMOCAP sentiment ablations, four runs (`noLe` and `noLeLo` on IEMOCAP-4 and IEMOCAP-6), GPU 0. Started 18:37.
+- Phase 1.4 window 0, 3 seeds, MOSEI, GPU 2 (queued after text+visual).
 
 ## 7. Blocked
 
@@ -76,7 +72,7 @@ Still to run: IEMOCAP-6 and IEMOCAP-4 sentiment ablations (no result JSON is wri
 
 ## 8. Known limitations for the write-up
 
-- The test split for MOSEI differs from the paper's (4,184 vs 4,662 utterances), and its label distribution differs from train.
-- Only 3 seeds for the no-text and modality runs, so differences below about 1 WF1 point are noise.
-- The sentiment ablation protocol uses the repo default, which selects by test sentiment F1, so those results are optimistic.
-- The `optimizer params` log line overcounts because replaced `edge_weight` tensors stay in the optimizer. It doesn't affect training, but it should be fixed in a later code change.
+- The MOSEI test split differs from the paper's (4,184 vs 4,662 utterances), and its label distribution differs from train.
+- No-text and modality rows use 3 seeds (MOSEI text+visual uses 2), so differences below about 1 WF1 point are noise.
+- The sentiment ablation protocol selects by test sentiment F1, so those results are optimistic.
+- The `optimizer params` log line overcounts because replaced `edge_weight` tensors stay in the optimizer. This does not affect training, but it should be fixed in a later code change.
