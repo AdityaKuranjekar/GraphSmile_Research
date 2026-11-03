@@ -58,12 +58,15 @@ Sentiment values are the maximum per-epoch `test_acc_sen` and `test_f1_sen` from
 | MELD | No L_e & L_o | 73.72 | 73.67 | 73.91 / 73.77 |
 | CMU-MOSEI | No L_e | 67.69 | 65.78 | 66.59 / 65.91 |
 | CMU-MOSEI | No L_e & L_o | 67.73 | 65.97 | 66.54 / 65.64 |
+| IEMOCAP-6 | No L_e | 83.24 | 83.33 | 84.41 / 84.53 |
+| IEMOCAP-6 | No L_e & L_o | 82.87 | 82.91 | 83.30 / 83.54 |
+| IEMOCAP-4 | No L_e | 85.68 | 85.70 | 85.47 / 85.40 |
+| IEMOCAP-4 | No L_e & L_o | 84.73 | 84.70 | 85.58 / 85.55 |
 
-The MELD and MOSEI values agree with the paper's collapsed-row replacements to within about a point. The IEMOCAP-6 and IEMOCAP-4 sentiment ablations are running on GPU 0.
+All four IEMOCAP runs completed 120 epochs with no tracebacks. Across all four datasets, the replacement sentiment values are within about one point of the paper's MSAC ablation rows, except IEMOCAP-6 `No L_e`, which is about 1.2 ACC below the paper.
 
 ## 6. Still running
 
-- IEMOCAP sentiment ablations, four runs (`noLe` and `noLeLo` on IEMOCAP-4 and IEMOCAP-6), GPU 0. Started 18:37.
 - Phase 1.4 window 0, 3 seeds, MOSEI, GPU 2 (queued after text+visual).
 
 ## 7. Blocked
