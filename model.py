@@ -93,6 +93,14 @@ class GraphSmile(nn.Module):
         self.senshift = SenShift_Feat(args.hidden_dim, args.drop,
                                       args.shift_win)
 
+        # Optional heads, created only when their flag is on (default layout unchanged).
+        self.text_drop = args.text_drop
+        self.aux_reg_head = (nn.Linear(args.hidden_dim, 1)
+                             if args.aux_reg > 0 else None)
+        self.uni_heads = (nn.ModuleDict({
+            m: nn.Linear(args.hidden_dim, n_classes_emo) for m in 'tva'
+        }) if args.uni_aux > 0 else None)
+
     def forward(self, feature_t0, feature_t1, feature_t2, feature_t3,
                 feature_v, feature_a, umask, qmask, dia_lengths):
 
@@ -112,6 +120,11 @@ class GraphSmile(nn.Module):
         else:
             merged_t_feat = used_t_features[0]
         featdim_t = self.dim_layer_t(merged_t_feat)
+        if self.training and self.text_drop > 0:
+            # Phase 3: drop whole text utterances before the graph (training only).
+            keep = (torch.rand(featdim_t.shape[0], featdim_t.shape[1], 1,
+                               device=featdim_t.device) >= self.text_drop).float()
+            featdim_t = featdim_t * keep
         featdim_v, featdim_a = self.dim_layer_v(feature_v), self.dim_layer_a(
             feature_a)
 
@@ -140,4 +153,23 @@ class GraphSmile(nn.Module):
 
         logit_shift = self.senshift(feat_fusion, feat_fusion, dia_lengths)
 
-        return logit_emo, logit_sen, logit_shift, feat_fusion
+        aux = {}
+        if self.aux_reg_head is not None:
+            # feat_fusion is already in the label order (dialogue-major, valid utterances only).
+            aux['reg'] = self.aux_reg_head(feat_fusion).squeeze(-1)
+        if self.uni_heads is not None:
+            seq = featdim_t.size(0)
+            lengths = torch.as_tensor(dia_lengths, device=featdim_t.device)
+            valid = (torch.arange(seq, device=featdim_t.device).unsqueeze(0)
+                     < lengths.unsqueeze(1))  # (batch, seq)
+
+            def flat(x):  # (seq, batch, h) -> (N, h), dialogue-major, valid only
+                return x.transpose(0, 1)[valid]
+
+            aux['uni'] = {
+                't': self.uni_heads['t'](flat(featdim_t)),
+                'v': self.uni_heads['v'](flat(featdim_v)),
+                'a': self.uni_heads['a'](flat(featdim_a)),
+            }
+
+        return logit_emo, logit_sen, logit_shift, feat_fusion, aux

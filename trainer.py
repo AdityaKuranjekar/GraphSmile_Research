@@ -4,6 +4,35 @@ from sklearn.metrics import f1_score, accuracy_score
 import torch.nn.functional as F
 from module import build_match_sen_shift_label
 from utils import AutomaticWeightedLoss
+from losses import focal_loss, ordinal_loss, aux_reg_loss, ogm_coefficient
+
+# Phase 2 and Phase 3 options, set by run.py. Defaults keep the original training path.
+OPTS = dict(aux_reg=0.0, aux_reg_loss='l1', ordinal_smooth=0.0, focal=False,
+            focal_gamma=0.0, focal_alpha_w=None, uni_aux=0.0, ogm=False, ogm_alpha=1.0)
+
+
+def set_options(**kw):
+    OPTS.update(kw)
+
+
+def apply_ogm(model, uni, labels, alpha):
+    """Scale encoder gradients by the OGM coefficient of each modality (after backward)."""
+    with torch.no_grad():
+        s = {m: F.softmax(uni[m], dim=1).gather(1, labels.unsqueeze(1)).mean().item()
+             for m in 'tva'}
+    base = model.module if hasattr(model, 'module') else model
+    groups = {
+        't': list(base.batchnorms_t.parameters()) + list(base.dim_layer_t.parameters()),
+        'v': list(base.dim_layer_v.parameters()),
+        'a': list(base.dim_layer_a.parameters()),
+    }
+    for m in 'tva':
+        others = [s[o] for o in 'tva' if o != m]
+        k = ogm_coefficient(s[m], sum(others) / len(others), alpha)
+        if k != 1.0:
+            for p in groups[m]:
+                if p.grad is not None:
+                    p.grad.mul_(k)
 
 seed = 2024
 
@@ -98,7 +127,7 @@ def train_or_eval_model(
         label_emo = torch.cat(label_emotions)
         label_sen = torch.cat(label_sentiments)
 
-        logit_emo, logit_sen, logit_sft, extracted_feature = model(
+        logit_emo, logit_sen, logit_sft, extracted_feature, aux = model(
             textf0, textf1, textf2, textf3, visuf, acouf, umask, qmask,
             dia_lengths)
 
@@ -111,7 +140,13 @@ def train_or_eval_model(
                 print('optimizer params: {}, model params: {}'.format(n_opt, n_model))
 
         prob_emo = F.log_softmax(logit_emo, -1)
-        loss_emo = loss_function_emo(prob_emo, label_emo)
+        if OPTS['ordinal_smooth'] > 0:
+            loss_emo = ordinal_loss(prob_emo, label_emo, OPTS['ordinal_smooth'])
+        elif OPTS['focal']:
+            loss_emo = focal_loss(prob_emo, label_emo, OPTS['focal_gamma'],
+                                  OPTS['focal_alpha_w'])
+        else:
+            loss_emo = loss_function_emo(prob_emo, label_emo)
         prob_sen = F.log_softmax(logit_sen, -1)
         loss_sen = loss_function_sen(prob_sen, label_sen)
         prob_sft = F.log_softmax(logit_sft, -1)
@@ -142,6 +177,17 @@ def train_or_eval_model(
         else:
             NotImplementedError
 
+        if OPTS['aux_reg'] > 0 and 'reg' in aux:
+            # Raw continuous sentiment score for the utterances in this batch, dialogue-major.
+            ds = dataloader.dataset
+            raw = np.concatenate([np.asarray(ds.videoLabels[v][:L], dtype=np.float32)
+                                  for v, L in zip(data[-1], dia_lengths)])
+            raw = torch.as_tensor(raw, device=label_emo.device)
+            loss = loss + OPTS['aux_reg'] * aux_reg_loss(aux['reg'], raw, OPTS['aux_reg_loss'])
+        if OPTS['uni_aux'] > 0 and 'uni' in aux:
+            loss = loss + OPTS['uni_aux'] * sum(
+                F.cross_entropy(aux['uni'][m], label_emo) for m in 'tva')
+
         preds_emo.append(torch.argmax(prob_emo, 1).cpu().numpy())
         labels_emo.append(label_emo.cpu().numpy())
         preds_sen.append(torch.argmax(prob_sen, 1).cpu().numpy())
@@ -152,6 +198,9 @@ def train_or_eval_model(
 
         if train:
             loss.backward()
+            if OPTS['ogm'] and 'uni' in aux:
+                apply_ogm(model, {m: aux['uni'][m].detach() for m in 'tva'}, label_emo,
+                          OPTS['ogm_alpha'])
             optimizer.step()
 
         extracted_feats.append(extracted_feature.cpu().detach().numpy())

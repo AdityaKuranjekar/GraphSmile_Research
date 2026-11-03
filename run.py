@@ -15,7 +15,7 @@ import time
 from utils import AutomaticWeightedLoss
 from model import GraphSmile
 from sklearn.metrics import confusion_matrix, classification_report, f1_score
-from trainer import train_or_eval_model, seed_everything, set_seed
+from trainer import train_or_eval_model, seed_everything, set_seed, set_options
 from dataloader import (
     IEMOCAPDataset_BERT,
     IEMOCAPDataset_BERT4,
@@ -139,9 +139,39 @@ parser.add_argument('--class_weight', action='store_true', default=False,
                     help='weight the emotion NLL loss by inverse class frequency of the train dialogues')
 parser.add_argument('--out_json', default='',
                     help='if set, write the selected-epoch result (valid and test, per class) to this file')
+# Phase 2 (CMUMOSEI7 only): every flag defaults to off.
+parser.add_argument('--aux_reg', type=float, default=0.0,
+                    help='weight of an auxiliary regression head on the raw sentiment score')
+parser.add_argument('--aux_reg_loss', default='l1', choices=['l1', 'mse'])
+parser.add_argument('--ordinal_smooth', type=float, default=0.0,
+                    help='mass s split between adjacent emotion classes (soft targets, cross-entropy)')
+parser.add_argument('--focal_gamma', type=float, default=0.0,
+                    help='focal loss gamma on the emotion head (0 with no alpha = plain NLL)')
+parser.add_argument('--focal_alpha', default='none', choices=['none', 'inverse'],
+                    help="'inverse' weights classes by N/(K*n_c) from the train split")
+# Phase 3 (all datasets): every flag defaults to off.
+parser.add_argument('--text_drop', type=float, default=0.0,
+                    help='training only: drop each text utterance before the graph with this probability')
+parser.add_argument('--uni_aux', type=float, default=0.0,
+                    help='weight of per-modality heads (text, visual, audio) each with its own CE loss')
+parser.add_argument('--ogm', action='store_true', default=False,
+                    help='on-the-fly gradient modulation of encoder gradients (needs --uni_aux > 0)')
+parser.add_argument('--ogm_alpha', type=float, default=1.0)
 
 args = parser.parse_args()
 set_seed(args.seed)
+
+_phase2 = args.aux_reg > 0 or args.ordinal_smooth > 0 or args.focal_gamma > 0 or args.focal_alpha != 'none'
+if _phase2 and args.dataset != 'CMUMOSEI7':
+    raise SystemExit('Phase 2 flags (--aux_reg, --ordinal_smooth, --focal_*) are for --dataset CMUMOSEI7 only')
+if args.ordinal_smooth > 0 and (args.focal_gamma > 0 or args.focal_alpha != 'none'):
+    raise SystemExit('--ordinal_smooth and --focal_* cannot be combined')
+if args.class_weight and (args.ordinal_smooth > 0 or args.focal_gamma > 0 or args.focal_alpha != 'none'):
+    raise SystemExit('--class_weight cannot be combined with --ordinal_smooth or --focal_*')
+if args.ogm and args.uni_aux <= 0:
+    raise SystemExit('--ogm needs --uni_aux > 0')
+if not (0.0 <= args.text_drop < 1.0):
+    raise SystemExit('--text_drop must be in [0, 1)')
 
 if args.no_seg:
     args.shift_win = -1  # one window covering the whole dialogue; labels and model agree
@@ -386,6 +416,23 @@ def main(local_rank):
             counts.astype(int).tolist(), np.round(weights, 3).tolist()))
         loss_function_emo = nn.NLLLoss(
             weight=torch.tensor(weights, dtype=torch.float32, device=device))
+
+    focal_alpha_w = None
+    if args.focal_alpha == 'inverse' or args.focal_gamma > 0:
+        ds = train_loader.dataset
+        train_idx = sorted(set(train_loader.sampler))
+        counts = np.bincount(
+            np.concatenate([np.asarray(ds.labels_emotion[ds.keys[i]]) for i in train_idx]),
+            minlength=n_classes_emo).astype(np.float64)
+        if args.focal_alpha == 'inverse':
+            focal_alpha_w = torch.tensor(counts.sum() / (n_classes_emo * np.maximum(counts, 1)),
+                                         dtype=torch.float32, device=device)
+        print('focal: gamma={}, alpha={}'.format(args.focal_gamma, args.focal_alpha))
+    set_options(aux_reg=args.aux_reg, aux_reg_loss=args.aux_reg_loss,
+                ordinal_smooth=args.ordinal_smooth,
+                focal=(args.focal_gamma > 0 or args.focal_alpha != 'none'),
+                focal_gamma=args.focal_gamma, focal_alpha_w=focal_alpha_w,
+                uni_aux=args.uni_aux, ogm=args.ogm, ogm_alpha=args.ogm_alpha)
 
     best_f1_emo, best_f1_sen, best_loss = None, None, None
     best_label_emo, best_pred_emo = None, None
