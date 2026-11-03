@@ -1,6 +1,6 @@
 # Gap plan: results summary (clean protocol, fixed code)
 
-**Status:** Phase 0, Phase 0c (no-text), Phase 1.3 (modality-only) and Phase 4.1 (sentiment, MELD and MOSEI) are complete as of 3 Nov 2026. Still running: Phase 1.4 window 0 (3 seeds, MOSEI, GPU 2) and the IEMOCAP sentiment ablations (GPU 0). Source: JSON files in `results/experiments/` on the GPU server, summarised by `gap_summary.py` (`test_acc_emo`, `test_f1_emo` at the epoch chosen on validation, `--clean_valid --select_on valid`).
+**Status:** Phase 0, Phase 0c (no-text), Phase 1.3 (modality-only), Phase 1.4 (context window) and Phase 4.1 (sentiment, all four datasets) are complete as of 3 Nov 2026. Phase 2 and Phase 3 are not started; their code is not yet on GitHub. Source: JSON files in `results/experiments/` on the GPU server, summarised by `gap_summary.py` (`test_acc_emo`, `test_f1_emo` at the epoch chosen on validation, `--clean_valid --select_on valid`).
 
 **Code:** branch `fix/loader-reshuffle-edge-weight`. The training order is reshuffled each epoch, and `edge_weight` is in the optimizer (see `gap-fix-loader-edge-weight.md`). All numbers here use the fixed code. Numbers from the earlier buggy code (`p0c_*`, `p0_*`, `gap-phase1-*`) are not comparable.
 
@@ -48,6 +48,17 @@ The earlier buggy clean baseline for MOSEI was 45.13 / 43.16. The new value is a
 
 On MOSEI, text alone reaches 43.6 WF1, and the full model reaches 44.0. Audio and visual add no more than about 0.4 WF1 together, which is within seed noise. The model is not using audio or visual in any meaningful way on MOSEI. This matches the evaluator's point that audio and visual are underused.
 
+## 4b. Phase 1.4: context window, MOSEI (clean, fixed code, 3 seeds)
+
+| Window (past and future utterances) | ACC | WF1 | Seeds |
+|---|---|---|---|
+| 0 (no context) | 46.41 ± 0.32 | 44.13 ± 0.38 | 3 |
+| 5 (default) | 46.50 ± 0.23 | 43.99 ± 0.47 | 5 |
+
+Per-seed window 0: ACC 46.06, 46.46, 46.70; WF1 44.57, 43.98, 43.85.
+
+Removing all context changes MOSEI results by less than 0.15 points on either metric, which is within seed noise. Context does not help on this dataset. This matches the paper's flat window curve on CMU-MOSEI and the monologue structure of the corpus. Hypothesis H2 (context does not help on MOSEI) is supported.
+
 ## 5. Phase 4.1: sentiment ablations (test-selected, seed 2024, one seed each)
 
 Sentiment values are the maximum per-epoch `test_acc_sen` and `test_f1_sen` from each run's log. These runs use the repo default protocol, which selects by test sentiment F1, so the numbers are optimistic. They are not clean-protocol numbers. The earlier 14–27% figures were emotion-level values from the final summary line, and they are withdrawn.
@@ -67,7 +78,7 @@ All four IEMOCAP runs completed 120 epochs with no tracebacks. Across all four d
 
 ## 6. Still running
 
-- Phase 1.4 window 0, 3 seeds, MOSEI, GPU 2 (queued after text+visual).
+Nothing on the GPU server is running from the gap plan.
 
 ## 7. Blocked
 
