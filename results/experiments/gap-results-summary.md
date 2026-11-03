@@ -48,15 +48,27 @@ The earlier buggy clean baseline for MOSEI was 45.13 / 43.16. The new value is a
 
 On MOSEI, text alone reaches about 43.6 WF1, and the full model is 44.0. Audio and visual together add about 0.4 WF1. The differences between rows are about the size of the seed noise, so they are not yet conclusive. This is consistent with the evaluator's point that audio and visual are underused on MOSEI.
 
-## 5. Phase 4.1: sentiment ablations (not yet valid)
+## 5. Phase 4.1: sentiment ablations (test-selected, seed 2024, one seed each)
 
-Both MELD and MOSEI sentiment runs (`no_Le` and `no_Le_Lo`, seed 2024) finished, but their JSON files were not written. Their log numbers (MELD ACC 14–15, MOSEI ACC 24–27) look like emotion-level results rather than sentiment. **Do not report these numbers until the classification report in each log has been checked for 3 sentiment classes.**
+Sentiment values are the maximum per-epoch `test_acc_sen` and `test_f1_sen` from each run's log. These runs use the repo default protocol, which selects by test sentiment F1, so the numbers are optimistic. They are not clean-protocol numbers. The earlier 14–27% figures were emotion-level values from the final summary line, and they are withdrawn.
+
+| Dataset | Ablation | Sentiment ACC | Sentiment WF1 | Paper MSAC (Table VI, ‡) ACC / WF1 |
+|---|---|---|---|---|
+| MELD | No L_e | 73.75 | 73.70 | 73.98 / 73.84 |
+| MELD | No L_e & L_o | 73.72 | 73.67 | 73.91 / 73.77 |
+| CMU-MOSEI | No L_e | 67.69 | 65.78 | 66.59 / 65.91 |
+| CMU-MOSEI | No L_e & L_o | 67.73 | 65.97 | 66.54 / 65.64 |
+
+The MELD and MOSEI values agree with the paper's collapsed-row replacements to within about 1 point. The IEMOCAP-6 and IEMOCAP-4 sentiment ablations are not yet run.
 
 ## 6. Still running or queued
 
-- IEMOCAP-4 no-text, seeds 1 and 2 (GPU 0)
-- IEMOCAP-6 no-text, 5 seeds, then IEMOCAP sentiment ablations (GPU 0)
-- MOSEI text + visual, seeds 1 and 2; then Phase 1.4 window 0 (GPU 2)
+Relaunched 2 Nov 18:05 after the earlier jobs stopped mid-run at about 17:05, with no traceback:
+- IEMOCAP-4 no-text, seeds 1 and 2 (GPU 0). Seed 2024 is done.
+- IEMOCAP-6 no-text, seeds 2024, 1, 2 (GPU 4)
+- MOSEI text + visual, seeds 1 and 2 (GPU 2); then Phase 1.4 window 0, 3 seeds
+
+Still to run: IEMOCAP-6 and IEMOCAP-4 sentiment ablations (no result JSON is written, so the skip check does not cover them).
 
 ## 7. Blocked
 
