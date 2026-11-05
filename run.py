@@ -15,7 +15,7 @@ import time
 from utils import AutomaticWeightedLoss
 from model import GraphSmile
 from sklearn.metrics import confusion_matrix, classification_report, f1_score
-from trainer import train_or_eval_model, seed_everything, set_seed, set_options
+from trainer import train_or_eval_model, seed_everything, set_seed, set_options, LAST
 from dataloader import (
     IEMOCAPDataset_BERT,
     IEMOCAPDataset_BERT4,
@@ -139,6 +139,8 @@ parser.add_argument('--class_weight', action='store_true', default=False,
                     help='weight the emotion NLL loss by inverse class frequency of the train dialogues')
 parser.add_argument('--out_json', default='',
                     help='if set, write the selected-epoch result (valid and test, per class) to this file')
+parser.add_argument('--save_probs', default='',
+                    help='if set, save the emotion probabilities of the selected epoch (valid and test) to this .npz')
 # Phase 2 (CMUMOSEI7 only): every flag defaults to off.
 parser.add_argument('--aux_reg', type=float, default=0.0,
                     help='weight of an auxiliary regression head on the raw sentiment score')
@@ -441,6 +443,7 @@ def main(local_rank):
     all_f1_emo, all_acc_emo, all_loss = [], [], []
     all_f1_sen, all_acc_sen = [], []
     sel = None  # result at the epoch chosen by --select_on valid
+    sel_probs = None  # probabilities at that epoch, for --save_probs
     all_f1_sft, all_acc_sft = [], []
 
     for epoch in range(n_epochs):
@@ -485,6 +488,7 @@ def main(local_rank):
             args.classify,
             args.shift_win,
         )
+        cur_valid_probs = LAST['emo_probs']
 
         print(
             'epoch: {}, train_loss: {}, train_acc_emo: {}, train_f1_emo: {}, valid_loss: {}, valid_acc_emo: {}, valid_f1_emo: {}'
@@ -557,6 +561,9 @@ def main(local_rank):
                             test_label_emo, test_pred_emo,
                             labels=list(range(n_classes_emo))).tolist(),
                     }
+                    # LAST holds the test-split probabilities of this epoch (the test call ran last).
+                    sel_probs = {'valid': cur_valid_probs, 'test': LAST['emo_probs'],
+                                 'valid_labels': valid_label_emo, 'test_labels': test_label_emo}
                     best_f1_emo = test_f1_emo
                     best_f1_sen = test_f1_sen
                     best_label_emo, best_pred_emo = test_label_emo, test_pred_emo
@@ -621,6 +628,10 @@ def main(local_rank):
             if args.out_json:
                 with open(args.out_json, 'w') as f:
                     json.dump(sel, f)
+            if args.save_probs and sel_probs is not None:
+                np.savez(args.save_probs, valid_probs=sel_probs['valid'],
+                         valid_labels=sel_probs['valid_labels'], test_probs=sel_probs['test'],
+                         test_labels=sel_probs['test_labels'], epoch=sel['epoch'])
         else:
             print("Acc: {}, F-Score: {}".format(max(all_acc_emo), max(all_f1_emo)))
         os.makedirs('results', exist_ok=True)

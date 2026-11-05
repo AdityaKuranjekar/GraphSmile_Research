@@ -15,6 +15,10 @@ def set_options(**kw):
     OPTS.update(kw)
 
 
+# Output of the most recent eval call: emotion softmax probabilities, utterance order as labels.
+LAST = {}
+
+
 def apply_ogm(model, uni, labels, alpha):
     """Scale encoder gradients by the OGM coefficient of each modality (after backward)."""
     with torch.no_grad():
@@ -93,6 +97,7 @@ def train_or_eval_model(
     preds_sen, labels_sen = [], []
     vids = []
     initial_feats, extracted_feats = [], []
+    probs_list = []
 
     assert not train or optimizer != None
     if train:
@@ -140,6 +145,8 @@ def train_or_eval_model(
                 print('optimizer params: {}, model params: {}'.format(n_opt, n_model))
 
         prob_emo = F.log_softmax(logit_emo, -1)
+        if not train:
+            probs_list.append(prob_emo.detach().exp().cpu().numpy())
         if OPTS['ordinal_smooth'] > 0:
             loss_emo = ordinal_loss(prob_emo, label_emo, OPTS['ordinal_smooth'])
         elif OPTS['focal']:
@@ -226,6 +233,7 @@ def train_or_eval_model(
 
     extracted_feats = np.array(extracted_feats)
 
+    LAST['emo_probs'] = np.concatenate(probs_list) if probs_list else None
     avg_loss = round(np.sum(losses) / len(losses), 4)
     avg_acc_emo = round(accuracy_score(labels_emo, preds_emo) * 100, 2)
     avg_f1_emo = round(
