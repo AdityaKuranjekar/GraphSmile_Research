@@ -98,6 +98,7 @@ def train_or_eval_model(
     vids = []
     initial_feats, extracted_feats = [], []
     probs_list = []
+    keys_list = []  # "<dialogue id>_<utterance index>", same order as probs_list
 
     assert not train or optimizer != None
     if train:
@@ -147,6 +148,8 @@ def train_or_eval_model(
         prob_emo = F.log_softmax(logit_emo, -1)
         if not train:
             probs_list.append(prob_emo.detach().exp().cpu().numpy())
+            for j, vid in enumerate(data[-1]):
+                keys_list.extend('%s_%d' % (vid, k) for k in range(dia_lengths[j]))
         if OPTS['ordinal_smooth'] > 0:
             loss_emo = ordinal_loss(prob_emo, label_emo, OPTS['ordinal_smooth'])
         elif OPTS['focal']:
@@ -234,6 +237,7 @@ def train_or_eval_model(
     extracted_feats = np.array(extracted_feats)
 
     LAST['emo_probs'] = np.concatenate(probs_list) if probs_list else None
+    LAST['emo_keys'] = np.array(keys_list) if keys_list else None
     avg_loss = round(np.sum(losses) / len(losses), 4)
     avg_acc_emo = round(accuracy_score(labels_emo, preds_emo) * 100, 2)
     avg_f1_emo = round(
