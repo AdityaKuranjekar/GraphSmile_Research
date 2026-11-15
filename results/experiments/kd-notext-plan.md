@@ -1,6 +1,6 @@
 # Plan: raising the no-text (va) accuracy and WF1 with knowledge distillation
 
-Status: plan only, nothing run yet. Branch `experiments/kd-notext-plan`. Source of ideas: `KD fix on graphsmile.pdf` (the evaluator's ideas A-G).
+Status: plan only, nothing run yet. Pass id: **p4-kd** (continues p0 to p3 and the gap-plan phases in `results/experiments/README.md` and `gap-results-summary.md`). Branch `experiments/kd-notext-plan`. Source of ideas: `KD fix on graphsmile.pdf` (the evaluator's ideas A-G).
 
 ## 1. Goal and the two success criteria
 
@@ -83,3 +83,55 @@ Per variant: ACC / WF1 for T1 (and T2 where relevant), both protocols, mean and 
 - Our no-text numbers already beat the paper's on IEMOCAP-6 (59.3 vs 54.2) and MOSEI (31.2 vs 28.3). The target here is gain over our own baseline.
 - A text teacher could plausibly help most on IEMOCAP (text is worth about 12 points) and MELD WF1 (about 23 points of headroom). MOSEI is uncertain.
 - Improving the full model (T2) is a weaker claim and likely small. Report it separately, not as a consequence of T1.
+
+## 10. Corrections after reviewing earlier passes (these override sections 1, 4 and 6 where they differ)
+
+### 10.1 Clean baselines (the keep rule compares these, not the test-selected numbers in section 1)
+
+Source: `gap-results-summary.md`, clean protocol (`--clean_valid --select_on valid`), fixed code (branch `fix/loader-reshuffle-edge-weight`: per-epoch reshuffle, `edge_weight` in optimizer). Mean +- sample std, WF1/ACC in %.
+
+| Dataset | T2 full ACC / WF1 (5 seeds) | T1 no-text ACC / WF1 (**3 seeds only**) | Delta text (WF1) |
+|---|---|---|---|
+| IEMOCAP-6 | 68.16 +- 0.55 / 68.09 +- 0.42 | 54.45 +- 0.89 / 53.88 +- 1.14 | 14.20 |
+| IEMOCAP-4 | 81.82 +- 1.15 / 81.84 +- 1.14 | 52.42 +- 0.22 / 51.22 +- 0.33 | 30.62 |
+| MELD | 66.67 +- 0.12 / 65.48 +- 0.13 | 48.82 +- 0.21 / 43.92 +- 1.00 | 21.56 |
+| CMU-MOSEI | 46.50 +- 0.23 / 43.99 +- 0.47 | 38.24 +- 0.15 / 28.97 +- 1.07 | 15.02 |
+
+The test-selected numbers in section 1 (our rerun on main) stay as the paper-comparable column only. Note the clean no-text numbers are much lower than the test-selected ones (for example IEMOCAP-4 51.2 vs 62.9 WF1), which shows how much epoch selection on test inflated them.
+
+**New phase P0b (must run first):** T1 baseline `va` with `--clean_valid --select_on valid`, seeds 2024, 1, 2, 3, 4 on the 4 datasets, to bring the no-text baseline to 5 seeds (2 more seeds on top of the existing 3, so 8 new runs for seeds 3 and 4, about 2.5 h; the other seeds are reused from Phase 0c). Without 5 seeds the keep rule cannot pass or fail anything.
+
+**Code base:** all p4 work branches from `fix/loader-reshuffle-edge-weight` (the fixed code), not main. The regression gate (section 2) is then: flags off must reproduce the Phase 0 / 0c JSON for seed 2024 exactly. The `results/rerun/` logs remain the reference for the main-branch code only.
+
+### 10.2 What earlier passes already settled (do not repeat)
+
+- Class-weighted loss (p1c, IEMOCAP-6): WF1 68.38 +- 0.62 vs 68.26, rejected. So idea F cannot rely on plain class weights; only logit adjustment or KD soft labels remain open, with low prior.
+- p2 sweeps (window, shift, depth, lambda): all rejected on IEMOCAP-6. Not retried.
+- Text dropout (`--text_drop 0.3`, MOSEI, 3 seeds): 44.17 +- 0.36 vs 44.12, flat. Unimodal heads (`--uni_aux`) and OGM lowered MOSEI WF1 (43.42, 43.61). These were run on MOSEI only; **IEMOCAP-6, IEMOCAP-4 and MELD are untested**, and the evaluator's 6 to 7 point cut in text dominance (target in `gap-results-summary.md` section 3) is still unmet. The p4 pilots therefore run modality dropout and A on IEMOCAP-6 and MELD, not MOSEI.
+- No-text MOSEI WF1 (28.97) is lowest of all, because the model collapses to majority classes without text. A KD teacher may help here by giving soft class structure, but this is untested.
+
+### 10.3 Known bug that affects the logit dump
+
+`trainer.py` does `vids += data[-1]` once after the loop, so `vids` holds only the last batch's dialogue ids. A dump keyed by it would be wrong. The dump must collect ids inside the batch loop, from a non-shuffled evaluation pass over train, valid and test (the train loader reshuffles each epoch on the fixed code). This change is flag-gated (`--save_teacher_logits`) and covered by the regression gate.
+
+### 10.4 How the best-epoch logits are obtained
+
+No checkpoint exists, and training continues after the best epoch. Chosen approach: **in-memory snapshot**. Each time valid F1 improves, run one extra no-grad pass over train/valid/test (non-shuffled), keep the logits and ids in CPU memory, and write them to `--save_teacher_logits` at the end of training. The cost is about 3 extra eval passes per improving epoch (small against training). No `state_dict` file is written, so no large files enter git (rule: no pickles or logs over 1 MB in git; the logits go to the GPU server only).
+
+### 10.5 Teacher budget (replaces the P1 row)
+
+One fixed teacher per dataset (the clean-valid `tva` run with seed 2024) is shared by all student seeds. This is cheaper and keeps teacher variance out of the student comparison, but it means the student's seed std does not include teacher variance, so state that in the write-up. Teacher runs: 4 (one per dataset), about 1.5 h, replacing the 6-run P1. Optional later check: a second teacher seed on IEMOCAP-6 only, to see whether results depend on the teacher.
+
+### 10.6 Updated phase list
+
+| Phase | What | Runs | Est. GPU time |
+|---|---|---|---|
+| P0 | Regression gate, flags off, seed 2024, `va` on 4 datasets vs Phase 0c JSON | 4 | ~1.5 h |
+| P0b | `va` clean baseline, seeds 3 and 4, 4 datasets (completes 5 seeds) | 8 | ~2.5 h |
+| P1 | One `tva` teacher per dataset, clean-valid, logits saved (seed 2024) | 4 | ~1.5 h |
+| P2 | **H pilot**: `va` KD student, 1 seed, IEMOCAP-6 and MELD, grid alpha {0.5, 1} x tau {2, 4}, chosen on valid | 8 | ~3 h |
+| P3 | A (branch KD), modality dropout, va-only-stream pilots, 1 seed, IEMOCAP-6 and MELD | 8 | ~3 h |
+| P4 | Winners only: 5 seeds x 4 datasets | up to 20 per variant | ~7 h per variant |
+| P5 | F (logit adjustment) and C / hierarchy pilots, MELD and MOSEI | ~8 | ~3 h |
+
+Stop for the supervisor's go-ahead after P0/P0b (baselines in hand) and again after each later phase. The first thing to run on approval is P0, then P0b.
