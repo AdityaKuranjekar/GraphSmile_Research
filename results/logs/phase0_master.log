@@ -1,0 +1,32 @@
+nohup: ignoring input
+[13:54:04] START mosei seed=2024
+[14:21:07] END   mosei seed=2024 exit=0
+[14:21:07] START mosei seed=1
+[14:56:57] END   mosei seed=1 exit=0
+[14:56:57] START mosei seed=2
+[15:22:20] END   mosei seed=2 exit=0
+[15:22:20] START mosei seed=3
+[15:48:54] END   mosei seed=3 exit=0
+[15:48:54] START mosei seed=4
+[16:21:32] END   mosei seed=4 exit=0
+[16:21:32] START meld seed=2024
+[16:42:32] END   meld seed=2024 exit=0
+[16:42:32] START meld seed=1
+[16:59:06] END   meld seed=1 exit=0
+[16:59:06] START meld seed=2
+[17:13:10] END   meld seed=2 exit=0
+[17:13:10] START meld seed=3
+[17:25:37] END   meld seed=3 exit=0
+[17:25:37] START meld seed=4
+[17:38:00] END   meld seed=4 exit=0
+[17:38:00] START iemocap4 seed=2024
+[17:42:17] END   iemocap4 seed=2024 exit=0
+[17:42:17] START iemocap4 seed=1
+[17:46:43] END   iemocap4 seed=1 exit=0
+[17:46:43] START iemocap4 seed=2
+[17:50:56] END   iemocap4 seed=2 exit=0
+[17:50:56] START iemocap4 seed=3
+[17:55:58] END   iemocap4 seed=3 exit=0
+[17:55:58] START iemocap4 seed=4
+[18:00:20] END   iemocap4 seed=4 exit=0
+[18:00:20] PHASE 0 DONE

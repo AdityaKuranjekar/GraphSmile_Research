@@ -31,7 +31,7 @@ in `docs/paper_vs_reproduced.pdf`.
 - **Hardware:** NVIDIA A100-PCIE-40GB on a shared server. Other users ran jobs on the same GPU.
 - **Software:** Python 3.10, PyTorch 2.0.0 with CUDA 11.7, NumPy 1.26.4, pandas 2.2.3, scikit-learn 1.6.1.
 - **Data:** the four feature pickles from the dataset release (`README.md`), not included in this repository.
-- **Seeds:** the code fixes the seed to 2024. Only one seed was run, so run-to-run spread is not measured.
+- **Seeds:** the code fixes the seed to 2024. The main tables use that one seed. The IEMOCAP-6 base was also run with five seeds (2024, 1, 2, 3, 4); see "Five-seed paper-protocol base" in section 4. All other datasets and ablations are single-seed, so their run-to-run spread is not measured.
 
 ## 3. Protocol
 
@@ -209,7 +209,7 @@ are not like-for-like, even for the full model.
 **Notes**
 - **Structure ablations (No Res, No FC-Res, No Seg):** the MERC results are close to the paper. No FC-Res and No Seg are within about 0.5 points on all datasets. No Res is close on IEMOCAP-6 and CMU-MOSEI, but MELD is about 4 points below the paper's ACC.
 - **Sentiment-loss-off rows (No L_s, No L_s & L_o):** the MSAC columns are not comparable. Removing the sentiment loss leaves the sentiment head untrained. The paper's MSAC block uses No L_e and No L_e & L_o (emotion loss off, and emotion and shift loss off), which are different rows.
-- **No L_e and No L_e & L_o (MSAC):** on MELD and CMU-MOSEI these are reasonably close to the paper. On IEMOCAP-6 and IEMOCAP-4 they are far below it (for example 54.59 ACC against 84.41 for No L_e on IEMOCAP-6, and 44.01 against 85.58 for No L_e & L_o on IEMOCAP-4). These four runs are not verified: the training curves have not been checked, and they may not have converged. See section 5.
+- **No L_e and No L_e & L_o (MSAC):** on MELD and CMU-MOSEI these are reasonably close to the paper. On IEMOCAP-6 and IEMOCAP-4 some runs are far below it (54.59 ACC against 84.41 for No L_e on IEMOCAP-6; 44.01 against 85.58 for No L_e & L_o on IEMOCAP-4). A three-seed rerun (pass p3, `results/experiments/p3-collapse-check-summary.md`) shows this is a **selection artifact, not failed training**: with the emotion loss off, the emotion head is untrained, so "best test emotion F1" picks an arbitrary epoch. At that epoch the sentiment head sometimes predicts one class (ACC 44.01), while the same runs reach about 80 to 83 ACC at other seeds. IEMOCAP-6 No L_e: seeds 2024 / 1 / 2 give ACC 54.59 / 81.52 / 80.10. The code's `--classify sentiment` option selects the epoch by sentiment F1, which is the natural choice for these MSAC rows; these rows have **not** been rerun that way yet. See section 5.
 - **No Textual:** our result is higher than the paper on IEMOCAP-6 (59.33 against 55.70). We remove text by zeroing its input. The paper does not say how it removed text, so this difference may come from that choice.
 
 ### Table VII: time and memory (GraphSmile)
@@ -235,13 +235,55 @@ The paper states an L2 weight of 1e-3. The repository default is 1e-4.
 
 The change in L2 moves IEMOCAP-6 by less than 0.2 points, so it does not explain the 1.5-point gap to the paper.
 
+### Five-seed paper-protocol base (IEMOCAP-6)
+
+This replaces the single-seed note in section 2 for the base row. Paper protocol: default `--select_on test`, seeds 2024, 1, 2, 3, 4.
+
+The `Test performance..` line prints `max(all_acc_emo)` and `max(all_f1_emo)`, so each value is the maximum over epochs of that metric on its own. The two maxima can come from different epochs. This is the same convention as the IEMOCAP-6 rows above.
+
+| Setting | ACC mean ± std | WF1 mean ± std | Per-seed WF1 (2024 / 1 / 2 / 3 / 4) |
+|---|---|---|---|
+| base | 71.62 ± 0.31 | 71.61 ± 0.36 | 71.17 / 71.88 / 71.79 / 71.93 / 71.26 |
+| shift_5 | 71.52 ± 0.20 | 71.48 ± 0.21 | 71.55 / 71.34 / 71.76 / 71.51 / 71.22 |
+| shift_10 | 71.49 ± 0.37 | 71.49 ± 0.32 | 71.23 / 71.72 / 71.77 / 71.68 / 71.07 |
+
+Std is the sample std (n = 5). Source logs: `results/logs/p2_<setting>_paper_seed<seed>.log`. The WF1 means match `results/experiments/p2-results.md`.
+
+For reference, the paper reports 72.77 ACC for this dataset (Table IV). Our base is about 1.1 points below on ACC.
+
+### Negative results
+
+No setting was kept. Each one failed the keep rule: the clean 5-seed mean must beat the clean baseline by more than the baseline std, and the paper-protocol WF1 must not be worse.
+
+| Setting | Clean WF1 (baseline 68.26 ± 0.94) | Paper-protocol WF1 (base 71.61) | Result |
+|---|---|---|---|
+| Class weighting (`--class_weight`) | 68.38 ± 0.62 (Happy 44.80 ± 4.34) | not checked here | No measurable gain |
+| shift_5 | 68.52 ± 1.73 (+0.26) | 71.48 (−0.13) | Not kept (inconclusive) |
+| shift_10 | 68.35 ± 1.58 (+0.09) | 71.49 (−0.11) | Not kept (inconclusive) |
+
+The stage 1 gains for shift_5 and shift_10 (+1.4 to +1.6 WF1 on 3 seeds) did not hold on five seeds. Details: `results/experiments/p2-results.md`.
+
 ## 5. Differences that remain
 
-1. **IEMOCAP-6 is 1.5 points below the paper** on ACC and WF1, mainly in Happy (-8.2). Only one seed was run, so we cannot say whether this is run-to-run variation or a real difference.
+1. **IEMOCAP-6 is about 1.2 points below the paper.** Under the paper protocol (best test epoch), the five-seed mean is 71.61 ± 0.36 WF1 and 71.62 ± 0.31 ACC, against the paper's 72.81 and 72.77. All five seeds (WF1 71.17 to 71.93) are below the paper's value, so seed variation alone does not explain the gap. The seed-2024 run used in the main tables (71.17) is the lowest of the five. The gap is largest in Happy (-8.2 in that run); Happy F1 varies by several points between seeds. The paper does not report its own seed spread.
 2. **Feature files:** we used the feature pickles from the dataset release. The paper's exact files may differ, which is untested.
 3. **Test-set selection:** the code picks the best epoch by test F1, as described in section 3.
-4. **Unverified MSAC runs:** No L_e (IEMOCAP-6, IEMOCAP-4) and No L_e & L_o (IEMOCAP-4) are far below the paper. Their training logs need checking, and a rerun with another seed would show whether the result is stable.
+4. **MSAC rows with the emotion loss off (No L_e, No L_e & L_o):** these were selected by emotion F1 although the emotion head is untrained, which produced the collapsed values (see the note under Table VI). A rerun with `--classify sentiment` (8 runs, about 1.5 hours) would give the comparable numbers; it has not been done.
 5. **Not reproduced:** the ‡ (optimized MSAC) rows, the baseline rows of Table IV, and Figs. 4 to 7.
+
+## 5b. Experiment record
+
+Start with `results/experiments/README.md`, which maps every log prefix to its phase and protocol. Each pass has a summary under `results/experiments/`. No tuned setting was adopted; the main tables stay at the Table III settings.
+
+| Pass | Question | Result |
+|---|---|---|
+| p0 | Seed variance, epoch chosen on validation, original split (`p0_*` logs) | The original code's validation dialogues overlap its training set, so this selector is contaminated. IEMOCAP-6 WF1 is 70.82 ± 0.47 over 5 seeds. |
+| p0 (other datasets) | Clean split, epoch chosen on validation, 5 seeds (`p0_iemocap4_*`, `p0_meld_*`, `p0_mosei_*` logs on the server; each log records `clean_valid=True`) | WF1 over 5 seeds: IEMOCAP-4 82.48, MELD 65.38, CMU-MOSEI 43.16 (paper-protocol single seed: 85.98, 66.55, 43.96). Logs are not yet in the repo. |
+| p0c | **Clean baseline:** `--clean_valid`, epoch chosen on validation (`p0c_*` logs) | IEMOCAP-6 WF1 **68.26 ± 0.94** over 5 seeds. This is the baseline every later clean-protocol pass is compared against. |
+| p1c | Class-weighted emotion loss (`--class_weight`) on the clean split (`p1c_*` logs) | 68.38 ± 0.62 against the p0c baseline 68.26. No measurable gain, not kept. (The p1 summary names the baseline "p0c" and the class-weight run "p1c".) |
+| p1b | Are our feature files the released ones? | All four server files are byte-identical to the README release (md5). IEMOCAP-6 matches Table II; MELD is one dialogue short and CMU-MOSEI counts differ from Table II in the released file itself. |
+| p2 | Sensitivity of window, shift window, layers, loss weights | Screened on 3 seeds; `shift_5` and `shift_10` looked better, but on 5 seeds the gains were +0.26 and +0.09 (not kept). Paper-protocol 5-seed WF1: base 71.61, shift_5 71.48, shift_10 71.49. |
+| p3 | Why do some MSAC ablation rows collapse? | Selection artifact (see Table VI notes), not failed training. |
 
 ## 6. Proof and reproducibility
 
