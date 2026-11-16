@@ -124,6 +124,9 @@ def train_or_eval_model(
         labels_sen.append(label_sen.cpu().numpy())
         preds_sft.append(torch.argmax(prob_sft, 1).cpu().numpy())
         labels_sft.append(label_sft.cpu().numpy())
+        _m = getattr(model, 'module', model)
+        if train and getattr(_m, 'sd_loss', None) is not None:
+            loss = loss + _m.sd_loss
         losses.append(loss.item())
 
         if train:

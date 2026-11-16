@@ -137,6 +137,11 @@ parser.add_argument('--clean_valid', action='store_true', default=False,
                     'repo trains on idx[:n-split], which contains the validation dialogues')
 parser.add_argument('--class_weight', action='store_true', default=False,
                     help='weight the emotion NLL loss by inverse class frequency of the train dialogues')
+parser.add_argument('--branch_sd', type=float, default=0.0,
+                    help='p5 (KD idea A): weight alpha of tau^2*KL(p_H||p_stream) over the six directional streams; 0 = off')
+parser.add_argument('--branch_mkl', type=float, default=0.0,
+                    help='p5: weight gamma of symmetric KL between the tv/ta/va branch heads; 0 = off')
+parser.add_argument('--sd_tau', type=float, default=2.0, help='p5: distillation temperature')
 parser.add_argument('--out_json', default='',
                     help='if set, write the selected-epoch result (valid and test, per class) to this file')
 

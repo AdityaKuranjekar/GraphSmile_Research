@@ -1,3 +1,4 @@
+import torch.nn.functional as F
 from module import HeterGConv_Edge, HeterGConvLayer, SenShift_Feat
 import torch.nn as nn
 import torch
@@ -93,6 +94,16 @@ class GraphSmile(nn.Module):
         self.senshift = SenShift_Feat(args.hidden_dim, args.drop,
                                       args.shift_win)
 
+        # p5 branch self-distillation. Built last and only when enabled, so the
+        # RNG draws (and therefore the flags-off run) match the baseline exactly.
+        self.branch_sd = getattr(args, 'branch_sd', 0.0)
+        self.branch_mkl = getattr(args, 'branch_mkl', 0.0)
+        self.sd_tau = getattr(args, 'sd_tau', 2.0)
+        self.sd_loss = None
+        if self.branch_sd > 0 or self.branch_mkl > 0:
+            self.aux_heads = nn.ModuleList(
+                [nn.Linear(args.hidden_dim, n_classes_emo) for _ in range(6)])
+
     def forward(self, feature_t0, feature_t1, feature_t2, feature_t3,
                 feature_v, feature_a, umask, qmask, dia_lengths):
 
@@ -136,6 +147,31 @@ class GraphSmile(nn.Module):
                        self.modal_fusion(featheter_va[1])) / 6
 
         logit_emo = self.emo_output(feat_fusion)
+
+        self.sd_loss = None
+        if self.training and (self.branch_sd > 0 or self.branch_mkl > 0):
+            # streams in order: t<-v, v<-t, t<-a, a<-t, v<-a, a<-v (rows are real utterances only)
+            streams = [featheter_tv[0], featheter_tv[1], featheter_ta[0],
+                       featheter_ta[1], featheter_va[0], featheter_va[1]]
+            aux = [h(self.modal_fusion(x)) for h, x in zip(self.aux_heads, streams)]
+            loss = feat_fusion.new_zeros(())
+            if self.branch_sd > 0:
+                T = self.sd_tau
+                p_t = F.softmax(logit_emo.detach() / T, -1)
+                kd = sum(F.kl_div(F.log_softmax(z / T, -1), p_t, reduction='batchmean')
+                         for z in aux) / len(aux)
+                loss = loss + self.branch_sd * T * T * kd
+            if self.branch_mkl > 0:
+                br = [(aux[0] + aux[1]) / 2, (aux[2] + aux[3]) / 2, (aux[4] + aux[5]) / 2]
+                lp = [F.log_softmax(z, -1) for z in br]
+                mkl, n = 0.0, 0
+                for i in range(3):
+                    for j in range(3):
+                        if i != j:
+                            mkl = mkl + F.kl_div(lp[j], lp[i], log_target=True, reduction='batchmean')
+                            n += 1
+                loss = loss + self.branch_mkl * mkl / n
+            self.sd_loss = loss
         logit_sen = self.sen_output(feat_fusion)
 
         logit_shift = self.senshift(feat_fusion, feat_fusion, dia_lengths)
