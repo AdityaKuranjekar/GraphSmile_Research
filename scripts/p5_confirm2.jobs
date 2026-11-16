@@ -1,0 +1,7 @@
+p5_sd1_t2_paper_seed4|--branch_sd 1.0 --sd_tau 2 --seed 4 --select_on test
+p5_sd1_t2_paper_seed2024|--branch_sd 1.0 --sd_tau 2 --seed 2024 --select_on test
+p5_base_paper_seed1|--seed 1 --select_on test
+p5_base_paper_seed2|--seed 2 --select_on test
+p5_base_paper_seed3|--seed 3 --select_on test
+p5_base_paper_seed4|--seed 4 --select_on test
+p5_base_paper_seed2024|--seed 2024 --select_on test
