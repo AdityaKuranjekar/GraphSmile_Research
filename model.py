@@ -176,4 +176,7 @@ class GraphSmile(nn.Module):
 
         logit_shift = self.senshift(feat_fusion, feat_fusion, dia_lengths)
 
+        if self.sd_loss is not None:
+            # returned (not just stored) so DDP sees the aux heads in the forward graph
+            return logit_emo, logit_sen, logit_shift, feat_fusion, self.sd_loss
         return logit_emo, logit_sen, logit_shift, feat_fusion

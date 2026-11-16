@@ -82,9 +82,11 @@ def train_or_eval_model(
         label_emo = torch.cat(label_emotions)
         label_sen = torch.cat(label_sentiments)
 
-        logit_emo, logit_sen, logit_sft, extracted_feature = model(
+        _out = model(
             textf0, textf1, textf2, textf3, visuf, acouf, umask, qmask,
             dia_lengths)
+        sd_loss = _out[4] if len(_out) == 5 else None
+        logit_emo, logit_sen, logit_sft, extracted_feature = _out[:4]
 
         prob_emo = F.log_softmax(logit_emo, -1)
         loss_emo = loss_function_emo(prob_emo, label_emo)
@@ -124,9 +126,8 @@ def train_or_eval_model(
         labels_sen.append(label_sen.cpu().numpy())
         preds_sft.append(torch.argmax(prob_sft, 1).cpu().numpy())
         labels_sft.append(label_sft.cpu().numpy())
-        _m = getattr(model, 'module', model)
-        if train and getattr(_m, 'sd_loss', None) is not None:
-            loss = loss + _m.sd_loss
+        if train and sd_loss is not None:
+            loss = loss + sd_loss
         losses.append(loss.item())
 
         if train:
