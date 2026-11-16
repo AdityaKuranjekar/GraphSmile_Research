@@ -1,0 +1,5 @@
+p5_base_clean_seed1|--seed 1 --clean_valid --select_on valid
+p5_base_clean_seed2|--seed 2 --clean_valid --select_on valid
+p5_base_clean_seed3|--seed 3 --clean_valid --select_on valid
+p5_base_clean_seed4|--seed 4 --clean_valid --select_on valid
+p5_base_clean_seed2024|--seed 2024 --clean_valid --select_on valid
