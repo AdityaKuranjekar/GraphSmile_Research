@@ -1,0 +1,21 @@
+p5_sd05_t2_clean_seed1|--branch_sd 0.5 --sd_tau 2 --seed 1 --clean_valid --select_on valid
+p5_sd05_t2_clean_seed2|--branch_sd 0.5 --sd_tau 2 --seed 2 --clean_valid --select_on valid
+p5_sd05_t2_clean_seed2024|--branch_sd 0.5 --sd_tau 2 --seed 2024 --clean_valid --select_on valid
+p5_sd1_t2_clean_seed1|--branch_sd 1.0 --sd_tau 2 --seed 1 --clean_valid --select_on valid
+p5_sd1_t2_clean_seed2|--branch_sd 1.0 --sd_tau 2 --seed 2 --clean_valid --select_on valid
+p5_sd1_t2_clean_seed2024|--branch_sd 1.0 --sd_tau 2 --seed 2024 --clean_valid --select_on valid
+p5_sd05_t4_clean_seed1|--branch_sd 0.5 --sd_tau 4 --seed 1 --clean_valid --select_on valid
+p5_sd05_t4_clean_seed2|--branch_sd 0.5 --sd_tau 4 --seed 2 --clean_valid --select_on valid
+p5_sd05_t4_clean_seed2024|--branch_sd 0.5 --sd_tau 4 --seed 2024 --clean_valid --select_on valid
+p5_sd1_t4_clean_seed1|--branch_sd 1.0 --sd_tau 4 --seed 1 --clean_valid --select_on valid
+p5_sd1_t4_clean_seed2|--branch_sd 1.0 --sd_tau 4 --seed 2 --clean_valid --select_on valid
+p5_sd1_t4_clean_seed2024|--branch_sd 1.0 --sd_tau 4 --seed 2024 --clean_valid --select_on valid
+p5_mkl01_clean_seed1|--branch_mkl 0.1 --seed 1 --clean_valid --select_on valid
+p5_mkl01_clean_seed2|--branch_mkl 0.1 --seed 2 --clean_valid --select_on valid
+p5_mkl01_clean_seed2024|--branch_mkl 0.1 --seed 2024 --clean_valid --select_on valid
+p5_mkl05_clean_seed1|--branch_mkl 0.5 --seed 1 --clean_valid --select_on valid
+p5_mkl05_clean_seed2|--branch_mkl 0.5 --seed 2 --clean_valid --select_on valid
+p5_mkl05_clean_seed2024|--branch_mkl 0.5 --seed 2024 --clean_valid --select_on valid
+p5_both_clean_seed1|--branch_sd 1.0 --sd_tau 2 --branch_mkl 0.5 --seed 1 --clean_valid --select_on valid
+p5_both_clean_seed2|--branch_sd 1.0 --sd_tau 2 --branch_mkl 0.5 --seed 2 --clean_valid --select_on valid
+p5_both_clean_seed2024|--branch_sd 1.0 --sd_tau 2 --branch_mkl 0.5 --seed 2024 --clean_valid --select_on valid
