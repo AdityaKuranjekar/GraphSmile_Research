@@ -1,0 +1,7 @@
+p6_dsd03ce03_clean_seed3|--depth_sd 0.3 --depth_ce 0.3 --seed 3 --clean_valid --select_on valid
+p6_dsd03ce03_clean_seed4|--depth_sd 0.3 --depth_ce 0.3 --seed 4 --clean_valid --select_on valid
+p6_dsd03ce03_paper_seed1|--depth_sd 0.3 --depth_ce 0.3 --seed 1
+p6_dsd03ce03_paper_seed2|--depth_sd 0.3 --depth_ce 0.3 --seed 2
+p6_dsd03ce03_paper_seed3|--depth_sd 0.3 --depth_ce 0.3 --seed 3
+p6_dsd03ce03_paper_seed4|--depth_sd 0.3 --depth_ce 0.3 --seed 4
+p6_dsd03ce03_paper_seed2024|--depth_sd 0.3 --depth_ce 0.3 --seed 2024
