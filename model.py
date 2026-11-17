@@ -104,6 +104,29 @@ class GraphSmile(nn.Module):
             self.aux_heads = nn.ModuleList(
                 [nn.Linear(args.hidden_dim, n_classes_emo) for _ in range(6)])
 
+        # p6 depth self-distillation (KD idea B). Exit k reads the residual running
+        # sum after k graph layers, fused exactly like H. Built last for RNG parity.
+        self.depth_sd = getattr(args, 'depth_sd', 0.0)
+        self.depth_ce = getattr(args, 'depth_ce', 0.0)
+        self.depth_on = self.depth_sd > 0 or self.depth_ce > 0
+        if self.depth_on:
+            n_layers = args.heter_n_layers
+            if len(set(n_layers)) != 1 or args.no_res:
+                raise ValueError('--depth_sd/--depth_ce need equal heter_n_layers and residuals on')
+            self.depth_exits = list(getattr(args, 'depth_exits', None) or range(1, n_layers[0]))
+            if not all(1 <= k <= n_layers[0] for k in self.depth_exits):
+                raise ValueError(f'--depth_exits must lie in 1..{n_layers[0]}')
+            self.exit_heads = nn.ModuleList(
+                [nn.Linear(args.hidden_dim, n_classes_emo) for _ in self.depth_exits])
+            for conv in (self.hetergconv_tv, self.hetergconv_ta, self.hetergconv_va):
+                conv.keep_partials = True
+
+    def _fuse(self, tv, ta, va):
+        # Same summation order as the original code, so H is bit-identical.
+        mf = self.modal_fusion
+        return (mf(tv[0]) + mf(ta[0]) + mf(tv[1]) + mf(va[0]) + mf(ta[1]) +
+                mf(va[1])) / 6
+
     def forward(self, feature_t0, feature_t1, feature_t2, feature_t3,
                 feature_v, feature_a, umask, qmask, dia_lengths):
 
@@ -140,11 +163,7 @@ class GraphSmile(nn.Module):
             (emo_v, emo_a), dia_lengths, self.win_p, self.win_f,
             heter_edge_index)
 
-        feat_fusion = (self.modal_fusion(featheter_tv[0]) + self.modal_fusion(
-            featheter_ta[0]) + self.modal_fusion(featheter_tv[1]) +
-                       self.modal_fusion(featheter_va[0]) +
-                       self.modal_fusion(featheter_ta[1]) +
-                       self.modal_fusion(featheter_va[1])) / 6
+        feat_fusion = self._fuse(featheter_tv, featheter_ta, featheter_va)
 
         logit_emo = self.emo_output(feat_fusion)
 
@@ -172,11 +191,29 @@ class GraphSmile(nn.Module):
                             n += 1
                 loss = loss + self.branch_mkl * mkl / n
             self.sd_loss = loss
+
+        extras = {}
+        if self.depth_on:
+            parts = (self.hetergconv_tv.partials, self.hetergconv_ta.partials,
+                     self.hetergconv_va.partials)
+            exit_logits = torch.stack([
+                head(self._fuse(parts[0][k - 1], parts[1][k - 1], parts[2][k - 1]))
+                for head, k in zip(self.exit_heads, self.depth_exits)])  # (K, N, C)
+            extras['exit_logits'] = exit_logits
+            if self.training and self.depth_sd > 0:
+                T = self.sd_tau
+                p_t = F.softmax(logit_emo.detach() / T, -1)
+                kd = sum(F.kl_div(F.log_softmax(z / T, -1), p_t, reduction='batchmean')
+                         for z in exit_logits) / len(exit_logits)
+                d = self.depth_sd * T * T * kd
+                self.sd_loss = d if self.sd_loss is None else self.sd_loss + d
+        if self.sd_loss is not None:
+            extras['sd_loss'] = self.sd_loss
         logit_sen = self.sen_output(feat_fusion)
 
         logit_shift = self.senshift(feat_fusion, feat_fusion, dia_lengths)
 
-        if self.sd_loss is not None:
-            # returned (not just stored) so DDP sees the aux heads in the forward graph
-            return logit_emo, logit_sen, logit_shift, feat_fusion, self.sd_loss
+        if extras:
+            # returned (not just stored) so DDP sees the aux/exit heads in the forward graph
+            return logit_emo, logit_sen, logit_shift, feat_fusion, extras
         return logit_emo, logit_sen, logit_shift, feat_fusion

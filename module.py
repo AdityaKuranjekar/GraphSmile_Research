@@ -21,6 +21,8 @@ class HeterGConv_Edge(torch.nn.Module):
         self.use_fc_res = use_fc_res  # False: residual skips the FC layer ("No FC-Res")
 
         self.edge_weight = None
+        self.keep_partials = False  # p6 depth SD: keep the running sum after each layer
+        self.partials = None
 
         self.hetergcn_layers = _get_clones(encoder_layer, num_layers)
         self.fc_layers = _get_clones(nn.Sequential(nn.Linear(feature_size, feature_size),
@@ -52,12 +54,16 @@ class HeterGConv_Edge(torch.nn.Module):
             no_cuda=self.no_cuda)
         if self.use_res:
             feature_sum = feature
+            partials = []
             for i in range(self.num_layers):
                 feature = self.hetergcn_layers[i](feature, num_modal, adj_weight)
                 if self.use_fc_res:
                     feature_sum = feature_sum + self.fc_layers[i](feature)
                 else:
                     feature_sum = feature_sum + feature
+                if self.keep_partials:
+                    partials.append(torch.chunk(feature_sum, num_modal, dim=0))
+            self.partials = partials if self.keep_partials else None
         else:
             for i in range(self.num_layers):
                 feature = self.hetergcn_layers[i](feature, num_modal, adj_weight)
@@ -296,3 +302,41 @@ def build_match_sen_shift_label(shift_win, dia_lengths, label_sen):
         raise NotImplementedError
 
     return label_shift
+
+
+def _shift_windows(shift_win, dia_lengths):
+    # (start, size) blocks in the same order as build_match_sen_shift_label.
+    start = 0
+    for dia_len in dia_lengths:
+        if shift_win == -1:
+            yield start, dia_len
+        else:
+            for i in range(math.ceil(dia_len / shift_win)):
+                last = i == math.ceil(dia_len / shift_win) - 1 and dia_len % shift_win != 0
+                yield start + i * shift_win, (dia_len % shift_win if last else shift_win)
+        start += dia_len
+
+
+def build_soft_shift_target(shift_win, dia_lengths, p_sen, mode='differ'):
+    """p7 (KD idea C): soft probability that utterances i and j differ in sentiment.
+
+    p_sen: (N, 3) teacher sentiment distributions (neg, neu, pos), rows in batch order.
+    'differ': 1 - sum_c p_i(c) p_j(c), the chance that two independent draws disagree.
+    'ordinal': |E_i[s] - E_j[s]| / 2 with s in {0, 1, 2}, so neg-pos counts as a full shift
+    and neg-neu as half. Pairs are flattened exactly like build_match_sen_shift_label.
+    """
+    if shift_win <= 0 and shift_win != -1:
+        raise NotImplementedError('Window must be greater than 0 or equal to -1')
+    levels = torch.arange(p_sen.size(1), dtype=p_sen.dtype, device=p_sen.device)
+    out = []
+    for a, w in _shift_windows(shift_win, dia_lengths):
+        P = p_sen[a:a + w]
+        if mode == 'differ':
+            t = 1 - P @ P.t()
+        elif mode == 'ordinal':
+            e = P @ levels
+            t = (e[:, None] - e[None, :]).abs() / (p_sen.size(1) - 1)
+        else:
+            raise ValueError(mode)
+        out.append(t.reshape(-1))
+    return torch.cat(out).clamp(0, 1)

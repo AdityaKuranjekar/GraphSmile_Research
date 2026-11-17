@@ -15,7 +15,7 @@ import time
 from utils import AutomaticWeightedLoss
 from model import GraphSmile
 from sklearn.metrics import confusion_matrix, classification_report, f1_score
-from trainer import train_or_eval_model, seed_everything, set_seed
+from trainer import train_or_eval_model, seed_everything, set_seed, dump_teacher_outputs
 from dataloader import (
     IEMOCAPDataset_BERT,
     IEMOCAPDataset_BERT4,
@@ -142,6 +142,23 @@ parser.add_argument('--branch_sd', type=float, default=0.0,
 parser.add_argument('--branch_mkl', type=float, default=0.0,
                     help='p5: weight gamma of symmetric KL between the tv/ta/va branch heads; 0 = off')
 parser.add_argument('--sd_tau', type=float, default=2.0, help='p5: distillation temperature')
+parser.add_argument('--depth_sd', type=float, default=0.0,
+                    help='p6 (KD idea B): weight of tau^2*KL(p_H||p_exit) from the full-depth output to shallower exits; 0 = off')
+parser.add_argument('--depth_ce', type=float, default=0.0,
+                    help='p6: weight of hard-label cross-entropy on the exits (deep supervision); 0 = off')
+parser.add_argument('--depth_exits', type=int, nargs='+', default=None,
+                    help='p6: which layer counts get an exit head (default: 1..L-1)')
+parser.add_argument('--teacher_path', default='',
+                    help='p7 (KD idea C): pickle written by --dump_teacher (vid -> sen/emo logits, H)')
+parser.add_argument('--sft_soft', type=float, default=0.0,
+                    help='p7: blend weight beta of the teacher soft shift target with the hard 0/1 label; 0 = off')
+parser.add_argument('--sft_tau', type=float, default=2.0, help='p7: temperature on teacher sentiment logits')
+parser.add_argument('--sft_target', default='differ', choices=['differ', 'ordinal'],
+                    help='p7: soft shift target, P(sentiments differ) or ordinal distance of expected sentiment')
+parser.add_argument('--rel_kd', type=float, default=0.0,
+                    help='p7: weight delta of relational KD (per-dialogue cosine-similarity matrices of H vs teacher); 0 = off')
+parser.add_argument('--dump_teacher', default='',
+                    help='p7: with --select_on valid, save teacher outputs on all train dialogues at the selected epoch')
 parser.add_argument('--out_json', default='',
                     help='if set, write the selected-epoch result (valid and test, per class) to this file')
 
@@ -150,6 +167,11 @@ set_seed(args.seed)
 
 if args.no_seg:
     args.shift_win = -1  # one window covering the whole dialogue; labels and model agree
+
+if (args.sft_soft > 0 or args.rel_kd > 0) and not args.teacher_path:
+    parser.error('--sft_soft/--rel_kd need --teacher_path')
+if args.dump_teacher and args.select_on != 'valid':
+    parser.error('--dump_teacher needs --select_on valid (the teacher epoch must not be test-selected)')
 
 if not args.modals or set(args.modals) - set('tva'):
     parser.error("--modals must be a non-empty subset of 't', 'v', 'a'")
@@ -390,6 +412,17 @@ def main(local_rank):
         loss_function_emo = nn.NLLLoss(
             weight=torch.tensor(weights, dtype=torch.float32, device=device))
 
+    kd = {'depth_ce': args.depth_ce, 'sft_soft': args.sft_soft, 'sft_tau': args.sft_tau,
+          'sft_target': args.sft_target, 'rel_kd': args.rel_kd}
+    if args.teacher_path:
+        with open(args.teacher_path, 'rb') as f:
+            kd['teacher'] = pk.load(f)
+        missing = set(train_loader.dataset.keys) - set(kd['teacher'])
+        if missing:
+            raise ValueError(f'teacher lacks {len(missing)} train dialogues')
+        print(f'teacher: {args.teacher_path} ({len(kd["teacher"])} dialogues)')
+    teacher_dump = None
+
     best_f1_emo, best_f1_sen, best_loss = None, None, None
     best_label_emo, best_pred_emo = None, None
     best_label_sen, best_pred_sen = None, None
@@ -430,6 +463,7 @@ def main(local_rank):
             args.epochs,
             args.classify,
             args.shift_win,
+            kd=kd,
         )
 
         valid_loss, valid_label_emo, valid_pred_emo, valid_acc_emo, valid_f1_emo, _, _, valid_acc_sen, valid_f1_sen, valid_acc_sft, valid_f1_sft, _, _, _ = train_or_eval_model(
@@ -449,6 +483,7 @@ def main(local_rank):
             args.epochs,
             args.classify,
             args.shift_win,
+            kd=kd,
         )
 
         print(
@@ -464,6 +499,7 @@ def main(local_rank):
             ))
 
         if local_rank == 0:
+            test_stats = {}
             test_loss, test_label_emo, test_pred_emo, test_acc_emo, test_f1_emo, test_label_sen, test_pred_sen, test_acc_sen, test_f1_sen, test_acc_sft, test_f1_sft, _, test_initial_feats, test_extracted_feats = train_or_eval_model(
                 model,
                 loss_function_emo,
@@ -481,6 +517,8 @@ def main(local_rank):
                 args.epochs,
                 args.classify,
                 args.shift_win,
+                kd=kd,
+                stats=test_stats,
             )
 
             all_f1_emo.append(test_f1_emo)
@@ -502,6 +540,9 @@ def main(local_rank):
                     time.strftime('%Y-%m-%d %H:%M:%S',
                                   time.localtime(time.time())),
                 ))
+            if test_stats:
+                print('test exits (layers {}): wf1 {} acc {}'.format(
+                    model.module.depth_exits, test_stats['exit_f1'], test_stats['exit_acc']))
             print('-' * 100)
 
             if args.select_on == 'valid':
@@ -521,7 +562,13 @@ def main(local_rank):
                         'test_confusion': confusion_matrix(
                             test_label_emo, test_pred_emo,
                             labels=list(range(n_classes_emo))).tolist(),
+                        **({'test_exit_f1': test_stats['exit_f1'],
+                            'test_exit_acc': test_stats['exit_acc'],
+                            'exits': model.module.depth_exits} if test_stats else {}),
                     }
+                    if args.dump_teacher:
+                        teacher_dump = dump_teacher_outputs(
+                            model, train_loader.dataset, batch_size, cuda)
                     best_f1_emo = test_f1_emo
                     best_f1_sen = test_f1_sen
                     best_label_emo, best_pred_emo = test_label_emo, test_pred_emo
@@ -588,6 +635,21 @@ def main(local_rank):
                     json.dump(sel, f)
         else:
             print("Acc: {}, F-Score: {}".format(max(all_acc_emo), max(all_f1_emo)))
+            if args.out_json:
+                # paper protocol (test-selected): max over epochs, as the original code reports
+                i = int(np.argmax(all_f1_emo))
+                with open(args.out_json, 'w') as f:
+                    json.dump({'protocol': 'paper', 'seed': args.seed,
+                               'test_f1_emo': max(all_f1_emo), 'test_acc_emo': max(all_acc_emo),
+                               'epoch_best_f1': i + 1, 'test_acc_at_best_f1': all_acc_emo[i],
+                               'test_per_class_f1': f1_score(
+                                   best_label_emo, best_pred_emo, average=None,
+                                   labels=list(range(n_classes_emo)), zero_division=0).tolist()}, f)
+        if teacher_dump is not None:
+            os.makedirs(os.path.dirname(args.dump_teacher) or '.', exist_ok=True)
+            with open(args.dump_teacher, 'wb') as f:
+                pk.dump(teacher_dump, f)
+            print(f'teacher dump: {args.dump_teacher} ({len(teacher_dump)} dialogues, epoch {sel["epoch"]})')
         os.makedirs('results', exist_ok=True)
         if not os.path.exists("results/record_{}_{}_{}.pk".format(
                 today.year, today.month, today.day)):

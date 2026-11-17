@@ -2,7 +2,7 @@ import numpy as np, random
 import torch
 from sklearn.metrics import f1_score, accuracy_score
 import torch.nn.functional as F
-from module import build_match_sen_shift_label
+from module import build_match_sen_shift_label, build_soft_shift_target
 from utils import AutomaticWeightedLoss
 
 seed = 2024
@@ -42,7 +42,14 @@ def train_or_eval_model(
     epochs=100,
     classify='',
     shift_win=5,
+    kd=None,
+    stats=None,
 ):
+    # kd (p6/p7, all optional): depth_ce, teacher {vid: {'sen','emo','H'}}, sft_soft,
+    # sft_tau, sft_target, rel_kd. stats: dict filled with per-exit eval metrics.
+    kd = kd or {}
+    teacher = kd.get('teacher') if train else None
+    exit_preds = []
     losses, preds_emo, labels_emo = [], [], []
     preds_sft, labels_sft = [], []
     preds_sen, labels_sen = [], []
@@ -85,8 +92,13 @@ def train_or_eval_model(
         _out = model(
             textf0, textf1, textf2, textf3, visuf, acouf, umask, qmask,
             dia_lengths)
-        sd_loss = _out[4] if len(_out) == 5 else None
+        extras = _out[4] if len(_out) == 5 else {}
+        sd_loss = extras.get('sd_loss')
         logit_emo, logit_sen, logit_sft, extracted_feature = _out[:4]
+        if teacher is not None:
+            vids_b = data[-1]
+            t_sen = torch.cat([torch.as_tensor(teacher[v]['sen'][:n]) for v, n in zip(vids_b, dia_lengths)]).float().to(logit_emo.device)
+            t_H = torch.cat([torch.as_tensor(teacher[v]['H'][:n]) for v, n in zip(vids_b, dia_lengths)]).float().to(logit_emo.device)
 
         prob_emo = F.log_softmax(logit_emo, -1)
         loss_emo = loss_function_emo(prob_emo, label_emo)
@@ -96,6 +108,22 @@ def train_or_eval_model(
         label_sft = build_match_sen_shift_label(shift_win, dia_lengths,
                                                 label_sen)
         loss_sft = loss_function_shift(prob_sft, label_sft)
+        beta = kd.get('sft_soft', 0.0)
+        if teacher is not None and beta > 0:
+            # p7: blend the hard 0/1 shift label with the teacher's soft "sentiments differ" target.
+            p_t = F.softmax(t_sen / kd.get('sft_tau', 1.0), -1)
+            soft = build_soft_shift_target(shift_win, dia_lengths, p_t, kd.get('sft_target', 'differ'))
+            y = (1 - beta) * label_sft.float() + beta * soft
+            loss_sft = -(y * prob_sft[:, 1] + (1 - y) * prob_sft[:, 0]).mean()
+        rel_loss = None
+        if teacher is not None and kd.get('rel_kd', 0.0) > 0:
+            # p7: similarity-preserving KD on H, per dialogue: match cos-sim matrices to the teacher's.
+            hs, ht = F.normalize(extracted_feature, dim=-1), F.normalize(t_H, dim=-1)
+            terms, a = [], 0
+            for n in dia_lengths:
+                terms.append(((hs[a:a + n] @ hs[a:a + n].t() - ht[a:a + n] @ ht[a:a + n].t()) ** 2).mean())
+                a += n
+            rel_loss = kd['rel_kd'] * torch.stack(terms).mean()
 
         if loss_type == 'auto':
             awl = AutomaticWeightedLoss(3)
@@ -128,6 +156,15 @@ def train_or_eval_model(
         labels_sft.append(label_sft.cpu().numpy())
         if train and sd_loss is not None:
             loss = loss + sd_loss
+        if train and rel_loss is not None:
+            loss = loss + rel_loss
+        if 'exit_logits' in extras:
+            if train and kd.get('depth_ce', 0.0) > 0:
+                ce = sum(loss_function_emo(F.log_softmax(z, -1), label_emo)
+                         for z in extras['exit_logits']) / len(extras['exit_logits'])
+                loss = loss + kd['depth_ce'] * ce
+            if not train:
+                exit_preds.append(extras['exit_logits'].argmax(-1).cpu().numpy())  # (K, N)
         losses.append(loss.item())
 
         if train:
@@ -145,6 +182,10 @@ def train_or_eval_model(
         labels_sft = np.concatenate(labels_sft)
 
         extracted_feats = np.concatenate(extracted_feats)
+        if stats is not None and exit_preds:
+            ep = np.concatenate(exit_preds, axis=1)
+            stats['exit_f1'] = [round(f1_score(labels_emo, e, average='weighted') * 100, 2) for e in ep]
+            stats['exit_acc'] = [round(accuracy_score(labels_emo, e) * 100, 2) for e in ep]
 
     vids += data[-1]
     labels_emo = np.array(labels_emo)
@@ -169,3 +210,34 @@ def train_or_eval_model(
         f1_score(labels_sft, preds_sft, average='weighted') * 100, 2)
 
     return avg_loss, labels_emo, preds_emo, avg_acc_emo, avg_f1_emo, labels_sen, preds_sen, avg_acc_sen, avg_f1_sen, avg_acc_sft, avg_f1_sft, vids, initial_feats, extracted_feats
+
+
+def dump_teacher_outputs(model, dataset, batch_size, cuda):
+    """p7: eval-mode sentiment/emotion logits and H for every dialogue in `dataset`, keyed by vid.
+
+    Called by the teacher (baseline) run at its valid-selected epoch. Edge-weight parameters are
+    restored afterwards, so a forward over unseen batch shapes cannot change the training run.
+    """
+    from torch.utils.data import DataLoader
+    net = model.module if hasattr(model, 'module') else model
+    convs = (net.hetergconv_tv, net.hetergconv_ta, net.hetergconv_va)
+    saved = [c.edge_weight for c in convs]
+    was_training = model.training
+    model.eval()
+    out = {}
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=dataset.collate_fn)
+    with torch.no_grad():
+        for data in loader:
+            textf0, textf1, textf2, textf3, visuf, acouf, qmask, umask, _, _ = (
+                [d.cuda() for d in data[:-1]] if cuda else data[:-1])
+            lens = [(umask[:, j] == 1).nonzero().tolist()[-1][0] + 1 for j in range(umask.size(1))]
+            o = model(textf0, textf1, textf2, textf3, visuf, acouf, umask, qmask, lens)
+            a = 0
+            for v, n in zip(data[-1], lens):
+                out[v] = {'emo': o[0][a:a + n].cpu().numpy(), 'sen': o[1][a:a + n].cpu().numpy(),
+                          'H': o[3][a:a + n].cpu().numpy().astype(np.float16)}
+                a += n
+    for c, w in zip(convs, saved):
+        c.edge_weight = w
+    model.train(was_training)
+    return out
