@@ -62,3 +62,15 @@ teachers; B jobs start immediately, C jobs wait for their teacher file. Then the
   ordinal target has the same zero pattern with values in {0, 0.5, 1}.
 - GPU: 3-epoch flags-off parity p6 vs p5 code at the paper config (seed 1, clean); same run with `--dump_teacher`
   must match too; 2-epoch smoke runs of each flag and of the paper-protocol JSON.
+
+## Teacher diagnostics (2026-11-17, `scripts/p7_teacher_diag.py`, seed 1 and 2 teachers)
+
+- Alignment fine: teacher argmax on its 108 fitted dialogues 75.4 emo / 86.7 sen acc; on the 12 held-out 73.0 / 84.6.
+  So the dumps are aligned and the teacher is not memorising its training dialogues.
+- Soft shift targets are very soft at τ=2: mean "differ" target 0.36 on same-sentiment pairs vs 0.575 on
+  different-sentiment pairs (τ=1: 0.20 vs 0.56). β=1 at τ=2 therefore nearly erases the shift signal. Added arm
+  β=0.5, τ=1 (`p7_sft05t1`).
+- Relational KD scale: teacher H is nearly collinear within a dialogue (mean off-diagonal cosine 0.963) and the
+  cos-matrix MSE between two independent teachers is 3.2e-4, so δ=1 and δ=10 are effectively no-ops. Added δ=100
+  and δ=1000. If neither moves anything, the fix is to centre H per dialogue before the cosine (code change, after
+  this sweep).

@@ -35,3 +35,12 @@ p6_base_paper_seed2|--seed 2
 p6_base_paper_seed3|--seed 3
 p6_base_paper_seed4|--seed 4
 p6_base_paper_seed2024|--seed 2024
+p7_sft05t1_clean_seed1|--sft_soft 0.5 --sft_tau 1 --teacher_path teachers/p6_base_clean_seed1.pk --seed 1 --clean_valid --select_on valid
+p7_rel100_clean_seed1|--rel_kd 100 --teacher_path teachers/p6_base_clean_seed1.pk --seed 1 --clean_valid --select_on valid
+p7_rel1000_clean_seed1|--rel_kd 1000 --teacher_path teachers/p6_base_clean_seed1.pk --seed 1 --clean_valid --select_on valid
+p7_sft05t1_clean_seed2|--sft_soft 0.5 --sft_tau 1 --teacher_path teachers/p6_base_clean_seed2.pk --seed 2 --clean_valid --select_on valid
+p7_rel100_clean_seed2|--rel_kd 100 --teacher_path teachers/p6_base_clean_seed2.pk --seed 2 --clean_valid --select_on valid
+p7_rel1000_clean_seed2|--rel_kd 1000 --teacher_path teachers/p6_base_clean_seed2.pk --seed 2 --clean_valid --select_on valid
+p7_sft05t1_clean_seed2024|--sft_soft 0.5 --sft_tau 1 --teacher_path teachers/p6_base_clean_seed2024.pk --seed 2024 --clean_valid --select_on valid
+p7_rel100_clean_seed2024|--rel_kd 100 --teacher_path teachers/p6_base_clean_seed2024.pk --seed 2024 --clean_valid --select_on valid
+p7_rel1000_clean_seed2024|--rel_kd 1000 --teacher_path teachers/p6_base_clean_seed2024.pk --seed 2024 --clean_valid --select_on valid
